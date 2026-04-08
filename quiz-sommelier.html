@@ -1,0 +1,5687 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Quiz Sommelier AIS</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+  :root {
+    --wine: #722F37;
+    --wine-dark: #4A1C23;
+    --wine-light: #8B3A42;
+    --gold: #C9A84C;
+    --gold-light: #E8D48B;
+    --cream: #FFF8F0;
+    --bg: #1A1A2E;
+    --card: #16213E;
+    --card-hover: #1A2744;
+    --text: #E8E8E8;
+    --text-muted: #A0A0B0;
+    --correct: #2D6A4F;
+    --correct-bg: #1B4332;
+    --wrong: #9B2226;
+    --wrong-bg: #641220;
+    --radius: 12px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  .bg-pattern {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background:
+      radial-gradient(ellipse at 20% 50%, rgba(114,47,55,0.15) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(201,168,76,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(114,47,55,0.1) 0%, transparent 40%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 24px 20px;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* HEADER */
+  .header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .header .icon {
+    font-size: 48px;
+    margin-bottom: 8px;
+  }
+  .header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+  }
+  .header p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 4px;
+  }
+
+  /* SCREENS */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  /* START SCREEN */
+  .start-card {
+    background: var(--card);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .start-card h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    margin-bottom: 16px;
+  }
+  .start-card p {
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 8px;
+    font-size: 0.95rem;
+  }
+  .stats-row {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin: 24px 0;
+  }
+  .stat-item {
+    text-align: center;
+  }
+  .stat-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--gold);
+  }
+  .stat-label {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .num-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 24px 0 28px;
+    flex-wrap: wrap;
+  }
+  .num-btn {
+    background: transparent;
+    border: 1px solid rgba(201,168,76,0.3);
+    color: var(--gold);
+    padding: 8px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+  .num-btn:hover { background: rgba(201,168,76,0.1); }
+  .num-btn.selected {
+    background: var(--gold);
+    color: var(--bg);
+    font-weight: 600;
+    border-color: var(--gold);
+  }
+
+  /* BUTTONS */
+  .btn-primary {
+    background: linear-gradient(135deg, var(--wine), var(--wine-dark));
+    color: #fff;
+    border: 1px solid var(--wine-light);
+    padding: 14px 48px;
+    border-radius: var(--radius);
+    font-size: 1.05rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 0.3px;
+  }
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(114,47,55,0.4);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.3);
+    padding: 12px 36px;
+    border-radius: var(--radius);
+    font-size: 0.95rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-secondary:hover {
+    background: rgba(201,168,76,0.1);
+  }
+
+  /* PROGRESS BAR */
+  .progress-section {
+    margin-bottom: 24px;
+  }
+  .progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .progress-text {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .progress-text span { color: var(--gold); font-weight: 600; }
+  .progress-bar {
+    height: 4px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--wine), var(--gold));
+    border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+
+  /* CATEGORY BADGE */
+  .category-badge {
+    display: inline-block;
+    background: rgba(201,168,76,0.12);
+    color: var(--gold);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 16px;
+  }
+
+  /* QUESTION CARD */
+  .question-card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    margin-bottom: 20px;
+  }
+  .question-text {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    font-weight: 400;
+    color: #f0f0f0;
+  }
+
+  /* OPTIONS */
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .option-btn {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .option-btn:hover:not(.disabled) {
+    background: var(--card-hover);
+    border-color: rgba(201,168,76,0.3);
+  }
+  .option-btn.selected {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.08);
+  }
+  .option-btn.disabled { cursor: default; }
+  .option-letter {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: all 0.2s;
+  }
+  .option-btn.selected .option-letter {
+    background: var(--gold);
+    color: var(--bg);
+  }
+
+  /* CONFIRM / NEXT */
+  .action-bar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  /* RESULTS SCREEN */
+  .results-card {
+    background: var(--card);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: var(--radius);
+    padding: 40px 32px;
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .score-circle {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 4px solid var(--gold);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px;
+    position: relative;
+  }
+  .score-circle .score-val {
+    font-family: 'Playfair Display', serif;
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .score-circle .score-pct {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+  .score-message {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.3rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .score-detail {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  /* REVIEW */
+  .review-section { margin-top: 24px; }
+  .review-section h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.2rem;
+    color: var(--gold);
+    margin-bottom: 16px;
+    text-align: left;
+  }
+  .review-item {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+    border-left: 4px solid var(--wrong);
+    text-align: left;
+  }
+  .review-question {
+    font-size: 0.95rem;
+    color: #f0f0f0;
+    margin-bottom: 10px;
+    line-height: 1.5;
+  }
+  .review-answers {
+    font-size: 0.85rem;
+    line-height: 1.8;
+  }
+  .review-wrong {
+    color: #E57373;
+  }
+  .review-correct {
+    color: #81C784;
+  }
+
+  .results-actions {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 32px;
+    flex-wrap: wrap;
+  }
+
+  /* TIMER */
+  .timer {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .timer span { color: var(--gold); }
+
+  /* ANIMATIONS */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .fade-in { animation: fadeIn 0.35s ease; }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .container { padding: 16px 14px; }
+    .question-card { padding: 24px 18px; }
+    .question-text { font-size: 1rem; }
+    .start-card { padding: 28px 20px; }
+    .header h1 { font-size: 1.6rem; }
+    .stats-row { gap: 20px; }
+    .stat-number { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="bg-pattern"></div>
+
+<div class="container">
+  <div class="header">
+    <div class="icon">🍷</div>
+    <h1>Quiz Sommelier AIS</h1>
+    <p>Allenamento per l'esame di terzo livello</p>
+  </div>
+
+  <!-- START SCREEN -->
+  <div id="screen-start" class="screen active">
+    <div class="start-card fade-in">
+      <h2>Pronto per allenarti?</h2>
+      <p>Domande estratte casualmente dal database.<br>Rispondi e scopri il tuo punteggio alla fine.</p>
+
+      <div class="stats-row">
+        <div class="stat-item">
+          <div class="stat-number" id="total-q">197</div>
+          <div class="stat-label">Domande totali</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-number" id="total-cat">22</div>
+          <div class="stat-label">Categorie</div>
+        </div>
+      </div>
+
+      <p style="font-size:0.85rem; color: var(--text-muted); margin-bottom: 4px;">Numero di domande:</p>
+      <div class="num-selector">
+        <button class="num-btn" data-n="10">10</button>
+        <button class="num-btn selected" data-n="20">20</button>
+        <button class="num-btn" data-n="30">30</button>
+        <button class="num-btn" data-n="0">Tutte</button>
+      </div>
+
+      <button class="btn-primary" id="btn-start">Inizia il quiz</button>
+    </div>
+  </div>
+
+  <!-- QUIZ SCREEN -->
+  <div id="screen-quiz" class="screen">
+    <div class="progress-section">
+      <div class="progress-info">
+        <div class="progress-text">Domanda <span id="q-current">1</span> di <span id="q-total">20</span></div>
+        <div class="timer" id="timer">⏱ <span>0:00</span></div>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill" style="width:0%"></div>
+      </div>
+    </div>
+
+    <div id="quiz-body" class="fade-in">
+      <span class="category-badge" id="q-category">Generale</span>
+      <div class="question-card">
+        <div class="question-text" id="q-text"></div>
+      </div>
+      <div class="options-list" id="q-options"></div>
+      <div class="action-bar">
+        <button class="btn-primary" id="btn-confirm" disabled>Conferma</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="screen-results" class="screen">
+    <div class="results-card fade-in">
+      <div class="score-circle">
+        <div class="score-val" id="res-score">0</div>
+        <div class="score-pct" id="res-pct">0%</div>
+      </div>
+      <div class="score-message" id="res-message">Ottimo!</div>
+      <div class="score-detail" id="res-detail"></div>
+    </div>
+
+    <div class="review-section" id="review-section">
+      <h3>Risposte sbagliate</h3>
+      <div id="review-list"></div>
+    </div>
+
+    <div class="results-actions">
+      <button class="btn-primary" id="btn-retry">Nuovo quiz</button>
+      <button class="btn-secondary" id="btn-retry-wrong">Ripeti solo le sbagliate</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== DATA ==========
+const DOMANDE = [
+{
+"categoria": "Generale",
+"question": "L'uva fresca servita a fine pasto non riesce a essere abbinata ad alcun vino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La tendenza amarognola è una durezza del cibo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "L'uovo ha un elevato contenuto di proteine.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La percezione del gusto dipende, da fattori contestuali, ma anche da specifiche condizioni fisiologiche come l'età, o da aspetti strettamente legati alle differenze genetiche",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Concordanza e contrapposizione non sono due metodi alternativi, ma rappresentano un unico criterio di abbinamento.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Un vino molto persistente oscilla tra 8 e 10 nella scala di abbinamento",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La persistenza gusto-olfattiva del cibo si abbina per concordanza con la persistenza del vino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "L'assaggio del cibo può dare sensazioni di morbidezza e di durezza.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nella scelta del vino in abbinamento si devono tenere in conto le valutazioni quantitative delle sensazioni derivanti dall'assaggio del cibo.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "L'effetto tattile di pungenza o pizzicore provocato dalla CO2 si combina, per concordanza, con la sensazione di grassezza percepita nei dessert, a condizione, però, che la dolcezza non sia molto percettibile",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La grassezza o pastosità del cibo è avvertita:",
+"options": [
+"Con le sensazioni sapide",
+"Con la masticazione",
+"In assenza di sensazioni amaricanti",
+"Durante la persistenza gusto olfattiva"
+],
+"answer": "Con la masticazione"
+},
+{
+"categoria": "Generale",
+"question": "A un cibo con rilevante sapidità si abbina un vino che spicchi in:",
+"options": [
+"Intensità",
+"Rotondità",
+"Tannicità",
+"Sapidità"
+],
+"answer": "Rotondità"
+},
+{
+"categoria": "Generale",
+"question": "Nell'abbinamento cibo-vino, si contrappone all'acidità del vino:",
+"options": [
+"Untuosità",
+"Pastosità",
+"Sapidità",
+"Persistenza"
+],
+"answer": "Pastosità"
+},
+{
+"categoria": "Generale",
+"question": "L'equilibrio gustativo di un vino bianco da abbinare a un cibo con grassezza e sapidità molto percettibile (9) è preferibile sia spostato verso:",
+"options": [
+"Rotondità + effervescenza",
+"Sapidità + effervescenza",
+"Freschezza + tannicità",
+"Sapidità + alcolicità"
+],
+"answer": "Rotondità + effervescenza"
+},
+{
+"categoria": "Generale",
+"question": "È un alimento che contiene proteine ad alto valore biologico",
+"options": [
+"I cereali",
+"La carne",
+"I legumi"
+],
+"answer": "La carne"
+},
+{
+"categoria": "Generale",
+"question": "L'untuosità è una sensazione:",
+"options": [
+"Chimica",
+"Molto scivolosa",
+"Tattile",
+"Grassa"
+],
+"answer": "Tattile"
+},
+{
+"categoria": "Generale",
+"question": "La sensazione di tendenza dolce consiste nel:",
+"options": [
+"Gusto dolce originato da abbondante presenza di zuccheri",
+"Gusto dolce originato da presenza di miele e confetture",
+"Inclinazione verso il gusto dolce generato da zuccheri composti"
+],
+"answer": "Inclinazione verso il gusto dolce generato da zuccheri composti"
+},
+{
+"categoria": "Generale",
+"question": "L'effetto effervescenza al gusto si abbina per concordanza con",
+"options": [
+"Dolcezza, se presente nei vini spumanti dolci",
+"In via esclusiva con tendenza dolce",
+"Con la grassezza",
+"Non ha concordanza"
+],
+"answer": "Non ha concordanza"
+},
+{
+"categoria": "Generale",
+"question": "Una pietanza con succulenza percettibile gradisce nel vino una componente:",
+"options": [
+"Alcolica",
+"Tannica",
+"Sapida",
+"Di pizzicore"
+],
+"answer": "Alcolica"
+},
+{
+"categoria": "Generale",
+"question": "Gli stimoli tattili del cibo sono avvertiti:",
+"options": [
+"Con le sensazioni sapide",
+"Con la masticazione",
+"Con le sensazioni di dolcezza"
+],
+"answer": "Con la masticazione"
+},
+{
+"categoria": "Generale",
+"question": "La succulenza del cibo è equilibrata dalla sapidità del vino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Le spezie rallentano la formazione della persistenza gusto-olfattiva del cibo perché ne accentuano l'intensità.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La struttura del cibo dipende esclusivamente da tipo, numero e proporzione degli ingredienti impiegati",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La sapidità genera una maggiore persistenza gusto-olfattiva rispetto alla tendenza dolce",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "L'intensità gusto-olfattiva è legata a sensazioni gustative, tattili e soprattutto aromatiche, ossia percepite per via retro-olfattiva.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nell'abbinamento di un vino con un dessert è importante abbinare la dolcezza per concordanza senza badare troppo alla struttura.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La grassezza del cibo si abbina per contrapposizione con l'alcolicità del vino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La grassezza produce essenzialmente una sensazione di:",
+"options": [
+"Tendenza dolce",
+"Impastamento del palato",
+"Scivolosità"
+],
+"answer": "Impastamento del palato"
+},
+{
+"categoria": "Generale",
+"question": "Un alimento che, in alcuni casi, può provocare una certa tendenza acida è:",
+"options": [
+"Il pomodoro",
+"L'aglio",
+"L'acetosella"
+],
+"answer": "Il pomodoro"
+},
+{
+"categoria": "Generale",
+"question": "È un alimento con funzione protettiva:",
+"options": [
+"La frutta",
+"I cereali",
+"Il formaggio"
+],
+"answer": "La frutta"
+},
+{
+"categoria": "Generale",
+"question": "L'equilibrio gustativo di un vino rosso da abbinare a un cibo con untuosità molto percettibile (8) è preferibile sia spostato verso:",
+"options": [
+"Alcolicità",
+"Morbidezza",
+"Tannicità",
+"Sapidità"
+],
+"answer": "Tannicità"
+},
+{
+"categoria": "Generale",
+"question": "L'effetto effervescenza al gusto si abbina per contrapposizione con:",
+"options": [
+"In via esclusiva con la grassezza",
+"In via esclusiva con la tendenza dolce",
+"Con grassezza e untuosità",
+"Con grassezza e tendenza dolce"
+],
+"answer": "Con grassezza e tendenza dolce"
+},
+{
+"categoria": "Generale",
+"question": "Il \"moderatamente percettibile\" riferito alle sensazioni del cibo oscilla tra 4 e il 5",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La stufatura è una cottura asciutta",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Se un cibo presenta spiccata grassezza, il vino in abbinamento deve avere decisa alcolicità",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La zucca genera una decisa sensazione di grassezza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il sapore del cibo è formato da sensazioni gustative, tattili e olfattive",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La persistenza è valutata in base alla permanenza in bocca, dopo la deglutizione, dell'insieme del sapore, ossia delle sensazioni gustative, tattili e retro-olfattive, con particolare attenzione a queste ultime.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La sensazione di scivolosità/untuosità è uguale in tutti gli oli",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La succulenza subisce l'influenza della temperatura a cui è servito un alimento.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Durante la cottura dell'alimento:",
+"options": [
+"Le proteine si rendono meno digeribili",
+"Parassiti e microrganismi vengono diffusi",
+"Le destrine si formano tramite reazione di idrolizzazione e ripolimerizzazione delle molecole dell'amido o della fecola"
+],
+"answer": "Le destrine si formano tramite reazione di idrolizzazione e ripolimerizzazione delle molecole dell'amido o della fecola"
+},
+{
+"categoria": "Generale",
+"question": "In caso di cottura nei grassi liquidi, per cercare un abbinamento quali effetti gustativi del vino si dovrà tenere in considerazione?",
+"options": [
+"La morbidezza",
+"La freschezza",
+"Pseudocalore",
+"Effervescenza"
+],
+"answer": "Pseudocalore"
+},
+{
+"categoria": "Generale",
+"question": "Nella cottura \"a pressione\" la temperatura è:",
+"options": [
+"Superiore a 100 °C",
+"Uguale alla cottura in acqua",
+"Tra 80 e 90 °C"
+],
+"answer": "Superiore a 100 °C"
+},
+{
+"categoria": "Generale",
+"question": "L'equilibrio gustativo di un vino bianco da abbinare a un cibo con untuosità percettibile (6) è preferibile sia spostato verso:",
+"options": [
+"Effervescenza + sapidità",
+"Freschezza + alcolicità",
+"Alcolicità + tannicità",
+"Morbidezza + dolcezza"
+],
+"answer": "Alcolicità + tannicità"
+},
+{
+"categoria": "Generale",
+"question": "Si abbinano per concordanza:",
+"options": [
+"Intensità gusto olfattiva e sapidità",
+"Persistenza gusto olfattiva e alcolicità",
+"Intensità e persistenza gusto olfattiva",
+"Persistenza gusto olfattiva e morbidezza"
+],
+"answer": "Intensità e persistenza gusto olfattiva"
+},
+{
+"categoria": "Generale",
+"question": "L'equilibrio gustativo di un vino rosso da abbinare a un cibo con succulenza percettibile (6) è preferibile sia spostato verso la:",
+"options": [
+"Effervescenza",
+"Sapidità",
+"Alcolicità",
+"Tannicità"
+],
+"answer": "Alcolicità"
+},
+{
+"categoria": "Generale",
+"question": "Che cosa attacca la fillossera?",
+"options": [
+"L'acino",
+"Il vino",
+"Le foglie della vite europea",
+"Le radici della vite europea"
+],
+"answer": "Le radici della vite europea"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Cosa accomuna la DOCG Chianti Classico a quella del Morellino di Scansano?",
+"options": [
+"La percentuale minima di sangiovese è uguale",
+"La versione Riserva deve maturare obbligatoriamente in legno",
+"Entrambi non specificano nel disciplinare i nomi dei vitigni ammessi oltre al sangiovese"
+],
+"answer": "Entrambi non specificano nel disciplinare i nomi dei vitigni ammessi oltre al sangiovese"
+},
+{
+"categoria": "Piemonte",
+"question": "Piemonte. Cosa accomuna il Barolo e il Barbaresco?",
+"options": [
+"Il riconoscimento della DOCG è avvenuto per entrambi nel 1980",
+"Hanno lo stesso periodo minimo di affinamento per la versione non Riserva",
+"Hanno lo stesso titolo alcolomterico minimo"
+],
+"answer": "Il riconoscimento della DOCG è avvenuto per entrambi nel 1980"
+},
+{
+"categoria": "Portogallo",
+"question": "È uno dei principali vitigni del Porto:",
+"options": [
+"Pinot nero",
+"Mourisco",
+"Tinta roriz",
+"Avarinho"
+],
+"answer": "Tinta roriz"
+},
+{
+"categoria": "Generale",
+"question": "Una salivazione \"filante\" e \"limacciosa\" è determinata da?",
+"options": [
+"Acidi",
+"Sostanze minerali",
+"Tannini",
+"Alta temperatura di servizio del vino"
+],
+"answer": "Sostanze minerali"
+},
+{
+"categoria": "Generale",
+"question": "La maturità tecnologica prende in esame il rapporto tra:",
+"options": [
+"Zuccheri e tannini",
+"Zuccheri e antociani",
+"Zuccheri e acidi fissi",
+"Zuccheri e flavoni"
+],
+"answer": "Zuccheri e acidi fissi"
+},
+{
+"categoria": "Sardegna",
+"question": "È un vino DOCG della Sardegna:",
+"options": [
+"Vernaccia di Gallura",
+"Vermentino di Gallura",
+"Vernaccia di Oristano",
+"Vermentino di Sardegna"
+],
+"answer": "Vermentino di Gallura"
+},
+{
+"categoria": "Generale",
+"question": "Le paste alimentari, in base all'umidità, si classificano in paste secche e paste fresche",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il carciofo crudo, condito con olio extravergine di oliva, sale e pepe, può essere abbinato con uno spumante secco ottenuto con il metodo Charmat",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La polenta ha tendenza dolce e spiccata intensità gusto-olfattiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il riso \"parboiled\" si ottiene bagnandolo e sottoponendolo all'azione del vapore",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Gli asparagi hanno il loro una spiccata componente aromatica e sfumata tendenza amarognola",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nell'abbinamento dei funghi con i vini rossi, una particolare attenzione deve essere prestata alla presenza del tannino che, qualora sia eccessiva, porta ad amplificare la sensazione di tendenza amarognola e di umami.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Cipolle, erba cipollina, aglio e scalogno sono caratterizzati da sensazioni solo tendenti all'acido.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La mollica del pane è più digeribile della crosta",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "I lupini, le arachidi e le cicerchie sono dei legumi.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La melanzana può conferire una delicata tendenza amarognola",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "È l'acido che incide maggiormente dal punto di vista del sapore acido:",
+"options": [
+"Citrico",
+"Malico",
+"Tartarico",
+"Succinico"
+],
+"answer": "Malico"
+},
+{
+"categoria": "Generale",
+"question": "La presenza di tartufo bianco, arricchisce i piatti di:",
+"options": [
+"Tendenza amarognola",
+"Pastosità",
+"Struttura",
+"Intensità e persistenza aromatica"
+],
+"answer": "Intensità e persistenza aromatica"
+},
+{
+"categoria": "Calabria",
+"question": "Quali sono le macrozone vitivinicole della Calabria?",
+"options": [
+"Terre di Cosenza, Lametino, Locride, Versante ionico",
+"Cirotano, Locride, Cosentino, Reggino",
+"Cirotano, Cosentino, Locride, Lametino",
+"Locride, Reggino, Terre di Cosenza, Cirotano"
+],
+"answer": "Cirotano, Cosentino, Locride, Lametino"
+},
+{
+"categoria": "Generale",
+"question": "La mancata irrigazione della vigna durante una stagione estiva molto secca e arida che cosa provoca?",
+"options": [
+"Incrementa la produzione dei fenoli",
+"Fa diminuire gli acidi e gli zuccheri",
+"Aumenta la parte fogliare e diminuisce quella a frutto",
+"Si blocca la crescita della pianta"
+],
+"answer": "Si blocca la crescita della pianta"
+},
+{
+"categoria": "Romagna",
+"question": "È un vitigno coltivato quasi esclusivamente in Romagna:",
+"options": [
+"Centesimino",
+"Sangiovese",
+"Bombino bianco"
+],
+"answer": "Centesimino"
+},
+{
+"categoria": "Generale",
+"question": "Nel mosto sono presenti anche le sostanze azotate, in che modo sono utilizzate dai lieviti?",
+"options": [
+"Come metabolizzante della glicerina",
+"Per sciogliere la malvidina",
+"Come forma di nutrimento"
+],
+"answer": "Come forma di nutrimento"
+},
+{
+"categoria": "Generale",
+"question": "Quale il nome di questa malattia della vite? [foglia con sintomi rossastri]",
+"options": [
+"Mal dell'esca",
+"Peronospora",
+"Flavescenza dorata",
+"Oidio"
+],
+"answer": "Mal dell'esca"
+},
+{
+"categoria": "Generale",
+"question": "È una sostanza del vino che può procurare un finale di gusto amarognolo:",
+"options": [
+"Potassio",
+"Chinone",
+"Leucoantociani",
+"Acido ascorbico"
+],
+"answer": "Chinone"
+},
+{
+"categoria": "Generale",
+"question": "Il tartufo bianco crea un deciso aumento di succulenza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "Anche un Barbaresco mediamente evoluto ben si abbina con un risotto alla milanese",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La differenza di base tra una pasta all'uovo e una di semola di grano duro è che la pasta all'uovo ha una, seppur lieve, maggiore succulenza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il riso alla creola è un ottimo contorno per le carni in umido",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Se il tartufo bianco accompagna una succulente tagliata di manzo, il vino rosso da abbinarvi dovrà essere dotato di una notevole evoluzione",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il mirepoix di verdure è un piatto freddo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Una Mozzarella di bufala lascia percepire una maggiore succulenza rispetto ad una scaglia di Parmigiano Reggiano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La tendenza amarognola è la caratteristica principale del tartufo nero",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Le verdure sott'aceto non rendono semplice l'abbinamento con il vino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "I profumi primari determinano soprattutto sentori di:",
+"options": [
+"Spezie ed erbe aromatiche",
+"Fiori bianchi e frutta fresca",
+"Fiori rossi e spezie",
+"Erbe aromatiche e tostature"
+],
+"answer": "Fiori bianchi e frutta fresca"
+},
+{
+"categoria": "Generale",
+"question": "Un tannino rugoso, accompagnato anche da un po' di sapore amarognolo e da un effetto pelosità del carciofo, potrebbe essere conseguente a?",
+"options": [
+"Uve troppo torchiate",
+"Uso di botti vecchie",
+"Eccessiva sosta in legno nuovo"
+],
+"answer": "Uve troppo torchiate"
+},
+{
+"categoria": "Generale",
+"question": "È una macro sensazione gustativa del vino?",
+"options": [
+"Sapidità",
+"Astringenza",
+"Morbidezza",
+"Dolcezza"
+],
+"answer": "Dolcezza"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. I vitigni del Cesanese del Piglio DOCG sono:",
+"options": [
+"Cesanese di Affilie e cesanese di Olevano Romano",
+"Cesanese comune e cesanese di Olevano Romano",
+"Cesanese comune e cesanese di Affilie",
+"Cesanese comune, cesanese di Affilie e cesanese di Olevano Romano"
+],
+"answer": "Cesanese comune e cesanese di Affilie"
+},
+{
+"categoria": "Generale",
+"question": "Il quantitativo di glicerina nel vino oscilla tra:",
+"options": [
+"3-12 g/l",
+"5-14 g/l",
+"5-18 g/l"
+],
+"answer": "5-18 g/l"
+},
+{
+"categoria": "Liguria",
+"question": "Liguria. È un vitigno non utilizzato nella DOC Riviera Ligure di Ponente sottozona Riviera dei Fiori:",
+"options": [
+"Granaccia",
+"Rossese",
+"Pigato"
+],
+"answer": "Granaccia"
+},
+{
+"categoria": "Generale",
+"question": "I terpeni sono contenuti soprattutto:",
+"options": [
+"Nella buccia",
+"Nei vinaccioli",
+"Nei raspi"
+],
+"answer": "Nella buccia"
+},
+{
+"categoria": "Generale",
+"question": "L'intensità gusto-olfattiva del pesce viene incrementata in caso di aggiunta di triti di scalogna, aglio e prezzemolo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il calamaro cotto alla griglia acquista una tendenza amarognola superiore di una seppia sempre cotta alla griglia",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il fritto misto di mare offre un'untuosità percettibile",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Se un pesce di acqua dolce è stato sottoposto alla cottura \"al blu\" significa che è stato impiegato del vino rosso in cottura",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La bottarga gradisce, innanzitutto, un vino con doti di morbidezza, in qualunque preparazione sia utilizzata.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Con l'anguilla in umido, gusto sapido e aromatico, grasso e mediamente succulente un vino rosso mediamente strutturato e frizzante può rivelarsi un abbinamento armonico",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il salmone affumicato necessita di un vino con maggior morbidezza rispetto a quello destinato ad accompagnare sashimi di salmone",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il fritto misto di mare, a causa della sua leggera untuosità, non gradisce l'abbinamento con un vino rosato",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'impiego della bottarga apporta spiccata tendenza dolce e persistenza gusto-olfattiva alle pietanze",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Più aumenta la sapidità e la struttura di un piatto di pesce, più ci si allontana da scegliere il vino spumante",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Cambiano dal colore verde al colore rosso mentre l'acino matura: che cosa sono?",
+"options": [
+"Tannini",
+"Antociani",
+"Quercitina",
+"Flavoni"
+],
+"answer": "Antociani"
+},
+{
+"categoria": "Generale",
+"question": "Qual è un fattore/elemento essenziale dell'ecosistema viticolo?",
+"options": [
+"Maturazione tecnologica",
+"Tecnica di vendemmia",
+"Clima"
+],
+"answer": "Clima"
+},
+{
+"categoria": "Molise",
+"question": "Molise. È un vitigno non contemplato come obbligatorio nella DOC Biferno Rosso:",
+"options": [
+"Montepulciano",
+"Aglianico",
+"Sangiovese"
+],
+"answer": "Sangiovese"
+},
+{
+"categoria": "Piemonte",
+"question": "Piemonte. È il vitigno che accomuna le DOC Strevi e Loazzolo:",
+"options": [
+"Erbaluce",
+"Moscato",
+"Cortese"
+],
+"answer": "Moscato"
+},
+{
+"categoria": "Lombardia",
+"question": "Le principali zone vitivinicole della Lombardia sono:",
+"options": [
+"Valtellina, Oltrepò Pavese, il Mantovano, provincia di Bergamo e Brescia",
+"Valtellina, Oltrepò Pavese, il Mantovano, provincia di Brescia, Valcalepio",
+"Oltrepò Pavese, il Mantovano, provincia di Bergamo e Brescia, Terre del Colleoni",
+"il Mantovano, Oltrepò Pavese, provincia di Bergamo e Brescia, Garda"
+],
+"answer": "Valtellina, Oltrepò Pavese, il Mantovano, provincia di Bergamo e Brescia"
+},
+{
+"categoria": "Generale",
+"question": "Gli acidi organici più abbondanti nelle uve sono:",
+"options": [
+"Tartarico e malico",
+"Succinico e citrico",
+"Citrico e tartarico"
+],
+"answer": "Tartarico e malico"
+},
+{
+"categoria": "Generale",
+"question": "È un acido che ricorda il gusto mela acerba:",
+"options": [
+"Acido succinico",
+"Acido citrico",
+"Acido malico",
+"Acido tartarico"
+],
+"answer": "Acido malico"
+},
+{
+"categoria": "Lazio",
+"question": "È un vitigno autoctono del Lazio:",
+"options": [
+"Trebbiano romano",
+"Cacchione",
+"Verdello"
+],
+"answer": "Cacchione"
+},
+{
+"categoria": "Generale",
+"question": "Nell'eventualità dell'uso dei raspi durante la fermentazione il tannino del vino può acquistare un gusto o una sensazione?",
+"options": [
+"Granulosa/sabbiosa",
+"Vegetale",
+"Legnosa"
+],
+"answer": "Vegetale"
+},
+{
+"categoria": "Generale",
+"question": "Il salmone, il tonno e il pesce spada, serviti crudi come antipasto, gradiscono un vino bianco secco di medio corpo, morbido e caldo, dal profumo intenso e persistente",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La gratinatura in forno del pesce, ne incrementa l'intensità gusto-olfattiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Le ostriche si caratterizzano per spiccata sapidità",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Una pietanza a base di rane è più strutturata rispetto a quella a base di lumache, quindi il vino dovrà essere più strutturato per le rane e più delicato per le lumache",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'abbinamento con la bottarga di tonno o di cefalo richiede un vino dotato di una spiccata acidità e sapidità in modo da valorizzare la sapidità della bottarga",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il pesce \"in carpione\" tende a escludere il vino in abbinamento",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "I molluschi serviti crudi come antipasto gradiscono un vino spumante secco, dal profumo delicato, un po' vegetale, fresco in acidità e con poco alcol",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Le seppie si prestano alla cottura \"in zimino\"",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Parlando di equilibrio gustativo del vino quale affermazione non è corretta?",
+"options": [
+"Nei vini bianchi vivaci e frizzanti è accettabile una predominanza delle durezze",
+"Un vino alcolico non sarà perfettamente equilibrato",
+"Un vino \"poco equilibrato\" crea una condizione gustativa inaccettabile",
+"Un vino equilibrato non garantisce una qualità eccellente"
+],
+"answer": "Un vino alcolico non sarà perfettamente equilibrato"
+},
+{
+"categoria": "Austria",
+"question": "In Austria il Grüner Veltliner trova condizioni di coltivazione ottimale nella regione:",
+"options": [
+"Weststeiermark",
+"Burgenland",
+"Vienna",
+"Stiria"
+],
+"answer": "Burgenland"
+},
+{
+"categoria": "Generale",
+"question": "Sono le uve da cui si ottiene lo Sherry:",
+"options": [
+"Palomino, pedro ximenez, xarello",
+"Pedro ximenez, palomino, parellada",
+"Pedro ximenez, palomino, muscatel"
+],
+"answer": "Pedro ximenez, palomino, muscatel"
+},
+{
+"categoria": "Veneto",
+"question": "Veneto. Sono i vitigni principali delle DOC (1)Bardolino e (2)Merlara Rosso",
+"options": [
+"Corvina per entrambe",
+"(1)Corvina e (2)Merlot",
+"(1)Corvina e (2)Raboso"
+],
+"answer": "(1)Corvina e (2)Merlot"
+},
+{
+"categoria": "Generale",
+"question": "È un acido che ricorda il gusto degli agrumi:",
+"options": [
+"Acido succinico",
+"Acido citrico",
+"Acido malico",
+"Acido limoncellico"
+],
+"answer": "Acido citrico"
+},
+{
+"categoria": "Basilicata",
+"question": "Sono aree viticole della Basilicata:",
+"options": [
+"Valle del Bradano",
+"Materano",
+"Piana di Metaponto"
+],
+"answer": "Materano"
+},
+{
+"categoria": "Generale",
+"question": "Qual è il nome di questo sistema di allevamento della vite? [foto Cappuccina]",
+"options": [
+"Guyot",
+"Cappuccina",
+"Casarsa",
+"Cortina"
+],
+"answer": "Cappuccina"
+},
+{
+"categoria": "Generale",
+"question": "Qual è il nome di questo sistema di allevamento della vite? [foto Pergola abruzzese]",
+"options": [
+"Casarsa",
+"Pergola trentina",
+"Tendone",
+"Pergola abruzzese"
+],
+"answer": "Pergola abruzzese"
+},
+{
+"categoria": "Generale",
+"question": "I molluschi offrono una spiccata sensazione di grassezza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'anguilla dà una sensazione di grassezza più percettibile rispetto a quella della trota",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Le lumache alla bourguignonne gradiscono un vino bianco morbido, sapido, eventualmente affinato in barrique e con lunga persistenza gusto-olfattiva.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Talvolta la sapidità del caviale induce una succulenza così accentuata che l'effetto disidrante del vino bianco secco non riesce a compensare",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "L'aringa affumicata mal si accompagna con uno spumante secco ottenuto con il metodo Charmat, è meglio optare per un metodo classico",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Alle percettibile tendenza dolce di un'aragosta s'accompagna sempre altrettanta grassezza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La maturità fenolica tiene conto di:",
+"options": [
+"Accumulo di antociani e acidi fissi",
+"Accumulo di tannini e acidi fissi",
+"Accumulo di antociani e tannini",
+"Accumulo di catechine e tannini"
+],
+"answer": "Accumulo di antociani e tannini"
+},
+{
+"categoria": "California",
+"question": "La maggiore superficie di coltivazione dello chardonnay in California è:",
+"options": [
+"Madera",
+"Napa Valley",
+"Monterey"
+],
+"answer": "Monterey"
+},
+{
+"categoria": "Campania",
+"question": "Quali sono le cinque macrozone della Campania?",
+"options": [
+"Casertano, Campi Flegrei, Irpinia, Cilento, Beneventano",
+"Area di Napoli, Irpinia, Cilento, Beneventano e Casertano",
+"Irpinia, Area del Vesuvio, Beneventano e Penisola Sorrentina, Area di Napoli"
+],
+"answer": "Area di Napoli, Irpinia, Cilento, Beneventano e Casertano"
+},
+{
+"categoria": "Generale",
+"question": "I principali prodotti della fermentazione alcolica sono:",
+"options": [
+"Anidride carbonica, etanolo ed energia",
+"Etanolo, anidride solforosa e anidride carbonica",
+"Acido lattico, anidride carbonica ed energia"
+],
+"answer": "Anidride carbonica, etanolo ed energia"
+},
+{
+"categoria": "Generale",
+"question": "È un'uva che matura tardivamente:",
+"options": [
+"Chardonnay",
+"Pinot nero",
+"Pinot grigio",
+"Nebbiolo"
+],
+"answer": "Nebbiolo"
+},
+{
+"categoria": "Australia",
+"question": "L'areale viticolo storico per il syrah in Australia è:",
+"options": [
+"Barossa Valley",
+"Rutherglen",
+"King Valley",
+"Canberra District"
+],
+"answer": "Barossa Valley"
+},
+{
+"categoria": "Generale",
+"question": "Una forte escursione termica notte/giorno che cosa provoca?",
+"options": [
+"Aumento della concentrazione zuccherina nella polpa dell'acino",
+"Aumento della concentrazione aromatica",
+"Diminuzione del contenuto acido nella polpa dell'acino",
+"Diminuzione della concentrazione zuccherina nella polpa dell'acino"
+],
+"answer": "Aumento della concentrazione aromatica"
+},
+{
+"categoria": "Abruzzo",
+"question": "La DOC Abruzzo prevede le seguenti tipologie produttive:",
+"options": [
+"Abruzzo Cococciola",
+"Abruzzo Trebbiano",
+"Abruzzo Chardonnay"
+],
+"answer": "Abruzzo Cococciola"
+},
+{
+"categoria": "Generale",
+"question": "La selvaggina è caratterizzata da una carne compatta e scura, ricca di tessuto connettivo.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La carne di maiale ha un'accentuata presenza di grasso d'infiltrazione",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'aumento della quantità di grasso nella carne influenza la percettibilità della succulenza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il taglio a cui è sottoposta la carne può determinare una maggiore o minore effetto di grassezza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Con il foie gras una birra trappista, scura, ad alta gradazione, crea un ottimo abbinamento.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La succulenza prodotta dalla carne bianca si abbina con lo pseudocalore alcolico, mentre quella prodotta dalla carne scura con l'astringenza dovuta al tannino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Le carni \"nere\" sono quelle che si ottengono dalla selvaggina",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il civet di selvaggina può essere accompagnato da vini rossi robusti dotati di prolungata persistenza gusto-olfattiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La carne che ha del grasso in superficie, sotto l'azione del calore lo trasforma in delicata untuosità",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Una birra Belgian Pale Ale si abbina con pollo e/o faraona arrosto",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Gli antociani si estraggono con più facilità:",
+"options": [
+"Alla fine della fermentazione alcolica",
+"Inoculando molta anidride solforosa",
+"Nei primi giorni di contatto bucce/mosto"
+],
+"answer": "Nei primi giorni di contatto bucce/mosto"
+},
+{
+"categoria": "Generale",
+"question": "In Italia è un vitigno alloctono:",
+"options": [
+"Fiano",
+"Pinot nero",
+"Albana",
+"Ribolla gialla"
+],
+"answer": "Pinot nero"
+},
+{
+"categoria": "Generale",
+"question": "La fermentazione malolattica accentua il profumo:",
+"options": [
+"Vegetale e speziato",
+"Minerale e di pietra focaia",
+"Vinoso, di mosto che fermenta",
+"Di burro da latte"
+],
+"answer": "Di burro da latte"
+},
+{
+"categoria": "Generale",
+"question": "In Italia per l'arricchimento del mosto si può utilizzare:",
+"options": [
+"Zucchero",
+"Mosto concentrato rettificato",
+"Mosto concentrato rettificato e zucchero"
+],
+"answer": "Mosto concentrato rettificato"
+},
+{
+"categoria": "Generale",
+"question": "Il portainnesto è utile per:",
+"options": [
+"Ridurre la resa",
+"Favorire lo sviluppo dei lieviti sulle bucce",
+"Impedire l'attacco di parassiti",
+"Selezionare le gemme"
+],
+"answer": "Impedire l'attacco di parassiti"
+},
+{
+"categoria": "Generale",
+"question": "Piatti a base di carni di selvaggina con salse a base di frutta, che creano una commistione gustativa di tendenza dolce, acida e amara sono difficilmente abbinabili con il vino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Brasare indica una modalità di cottura lenta che combina l'arrostitura e la stufatura di un alimento utilizzando pochi liquidi.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Con la carne rossa arrosto si abbina anche una Dark Beer.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La trippa è in genere molto ricca di grasso",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il grasso di infiltrazione determina, tra l'altro, le condizioni per determinare la tenerezza della carne",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Alle carni \"rosse\" appartengono anche il bufalo e l'equino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "In Valle d'Aosta il \"Nus Malvoisie\" è in realtà il vitigno?",
+"options": [
+"Malvasia aromatica di Candia",
+"Pinot bianco",
+"Traminer aromatico",
+"Pinot grigio"
+],
+"answer": "Pinot grigio"
+},
+{
+"categoria": "Generale",
+"question": "La fermentazione in bianco corrisponde a una vinificazione:",
+"options": [
+"Senza contatto del mosto con le bucce",
+"Di sole uve bianche",
+"A bassa temperatura",
+"Di uve bianche aromatiche"
+],
+"answer": "Senza contatto del mosto con le bucce"
+},
+{
+"categoria": "Lombardia",
+"question": "Com'è chiamato il vitigno nebbiolo coltivato in Lombardia?",
+"options": [
+"Pignola valtellinese",
+"Prugnola",
+"Chiavennasca"
+],
+"answer": "Chiavennasca"
+},
+{
+"categoria": "Generale",
+"question": "La carne alla tartara o all'albese si distingue sempre per la presenza della tendenza dolce",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Le carni equine hanno un gusto relativamente dolciastro che produce una tendenza dolce ben percettibile",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Le preparazioni come la carne all'albese e la tartare di manzo gradiscono vini bianchi, morbidi e di buona alcolicità, con delicata intensità e persistenza.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il vitello tonnato richiede vini di buona struttura e intensità, freschi ma allo stesso tempo sufficientemente morbidi da tenere a bada le componenti di sapidità e tendenza acida della salsa.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Fegato, cuore, rognoni, animelle, trippa e testina sono classificabili in frattaglie rosse e frattaglie bianche",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il bollito si ottiene in modo perfetto se durante la cottura la carne è messa in pentola quando l'acqua è fredda",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'agnello pré-salé subisce una speciale salatura con sale marino di Bretagna prima di essere immesso al commercio",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il grasso di infiltrazione rende la carne più morbida ma molto meno saporita",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La presenza nella cottura della carne di pomodoro, erbe aromatiche e spezie, indirizza a scegliere vini rossi, di corpo, in cui ci sia equilibrio tra tannicità e alcol",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Come si chiama questo strumento per misurare la quantità di zucchero presente nell'uva?",
+"options": [
+"Rifrattometro",
+"Densimetro",
+"Mostimetro"
+],
+"answer": "Rifrattometro"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Emilia-Romagna. Qual è il vitigno usato nella DOC Reno Montuni?",
+"options": [
+"Montuni",
+"Montù",
+"Pignoletto"
+],
+"answer": "Montù"
+},
+{
+"categoria": "Generale",
+"question": "Un vitigno aromatico è particolarmente ricco di:",
+"options": [
+"Terpeni",
+"Esteri",
+"Eteri",
+"Alcoli e polialcoli"
+],
+"answer": "Terpeni"
+},
+{
+"categoria": "Generale",
+"question": "L'acido organico caratteristico delle uve meno mature è:",
+"options": [
+"L'acido malico",
+"L'acido tartarico",
+"L'acido succinico"
+],
+"answer": "L'acido malico"
+},
+{
+"categoria": "Generale",
+"question": "Lo zampone di Modena, diversamente dal cotechino, si caratterizza per una maggiore tendenza amarognola",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il cotechino cremonese è detto vanigliato perché deve essere cotto in acqua con aggiunta del baccello di vaniglia",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Lardo e guanciale si ottengono dalla stessa parte del maiale",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'unica bevanda che accompagna un piatto composto da würstel lessati, crauti e senape è una Dortmunder beer",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'abbinamento con salumi ricchi di grassezza e sapidità, come il cotechino o lo zampone, richiede l'abbinamento con spumanti secchi dotati di spiccata effervescenza ed elevata acidità",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Per i salumi caratterizzati da grassezza e tendenza dolce, esaltati anche da collosità, diventa quasi indispensabile il contributo dell'effervescenza per tentare un abbinamento.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La tipica succulenza dei salumi è legata soprattutto alla presenza di sapidità",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La 'nduja è un tipico insaccato calabrese dotato di spiccata tendenza dolce, un abbinamento ideale è con l'Aversa DOC",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il lardo di Colonnata, opportunamente depurato del suo strato d'erbe aromatiche, sale e aglio, ben si abbina con un Trento brut",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Con i salumi affumicati, dove una parte della tendenza dolce è contrastata dall'amaro dell'affumicatura, i vini rosati, con equilibrio sapido, anziché fresco, non sono in grado di creare un abbinamento armonioso.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Che cosa è accaduto a questo grappolo d'uva? [grappolo con acini mancanti]",
+"options": [
+"È semplicemente un grappolo spargolo",
+"È colpito da acinellatura",
+"Non ha niente, deve solo completare l'ingrossamento degli acini",
+"La pianta ha un afflusso radicale"
+],
+"answer": "È colpito da acinellatura"
+},
+{
+"categoria": "Generale",
+"question": "I vitigni autoctoni sono:",
+"options": [
+"Originari di una determinata zona",
+"Di antica provenienza francese e tedesca",
+"Gli unici autorizzati per la produzione di vini DOCG",
+"Quelli coltivati solo in Italia"
+],
+"answer": "Originari di una determinata zona"
+},
+{
+"categoria": "Generale",
+"question": "La rimozione dell'apice vegetativo e di un numero variabile di foglie si chiama:",
+"options": [
+"Spollonatura",
+"Scacchiatura",
+"Defogliazione",
+"Cimatura"
+],
+"answer": "Cimatura"
+},
+{
+"categoria": "Generale",
+"question": "Che cosa sono i cloni?",
+"options": [
+"Il nome locale dei vitigni",
+"In pratica sono i sinonimi di un vitigno",
+"Vitigni geneticamente diversi",
+"Vitigni geneticamente identici"
+],
+"answer": "Vitigni geneticamente identici"
+},
+{
+"categoria": "Friuli",
+"question": "Quali sono le zone DOC del Friuli?",
+"options": [
+"Carso, Lison-Pramaggiore, Grave, Latisana, Aquileia, Annia, Isonzo, Collio, Colli Orientali del Friuli",
+"Carso, Grave, Latisana, Aquileia, Annia, Isonzo, Collio, Colli Orientali del Friuli",
+"Carso, Grave, Latisana, Aquileia, Isonzo, Collio, Colli Orientali del Friuli"
+],
+"answer": "Carso, Lison-Pramaggiore, Grave, Latisana, Aquileia, Annia, Isonzo, Collio, Colli Orientali del Friuli"
+},
+{
+"categoria": "Emilia",
+"question": "Emilia. Qual è il vitigno che domina l'uvaggio della DOC Gutturnio?",
+"options": [
+"Croatina e barbera sono paritari",
+"Croatina",
+"Barbera"
+],
+"answer": "Barbera"
+},
+{
+"categoria": "Generale",
+"question": "L'asparago selvatico è più aromatico di quello coltivato.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il carciofo bollito si abbina con un vino rosso frizzante con gusto lievemente dolce, questo gli consente di attenuare la leggera tendenza amarognola del carciofo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La pasta trafilata in bronzo è in grado di assorbire meglio le salse e di amalgamare i sapori alla perfezione",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La sensazione principale della pizza è dovuta al suo impasto, ed è la tendenza dolce",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il riso apporta una sensazione di tendenza dolce, nel caso in cui sia impiegato nel dessert, deve essere considerata insieme alla dolcezza per scegliere la tipologia di vino da abbinarvi",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il riso selvaggio o riso nero degli indiani ha una spiccata intensità aromatica",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Anche la farina di orzo è molto adatta alla panificazione",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L'asparago selvatico è dotato di una tendenza amarognola superiore dell'asparago bianco di Bassano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punteggio ha un'incidenza del 15% sul totale:",
+"options": [
+"Aspetto",
+"Complessità, attrattiva",
+"Armonia complessiva",
+"Intensità, struttura",
+"Equilibrio gustativo"
+],
+"answer": "Equilibrio gustativo"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punteggio il coefficiente correttivo dell'equilibrio è:",
+"options": [
+"0.5",
+"1",
+"1.5",
+"2"
+],
+"answer": "1"
+},
+{
+"categoria": "Generale",
+"question": "Chi ha detto: 'una delle più grandi difficoltà in degustazione è saper apprezzare (quindi valutare) ciascun vino all'interno della propria categoria'?",
+"options": [
+"Anne C. Noble",
+"Luigi Veronelli",
+"Émile Peynaud"
+],
+"answer": "Émile Peynaud"
+},
+{
+"categoria": "Generale",
+"question": "Il tempo che intercorre tra lo stimolo e la percezione dell'amarezza è di circa?",
+"options": [
+"1 secondo",
+"3 secondi",
+"2 secondi",
+"È immediato"
+],
+"answer": "3 secondi"
+},
+{
+"categoria": "Generale",
+"question": "Il colore rosa corallo è, tra l'altro, l'evoluzione del colore ramato",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La complessità olfattiva è un elemento di minor distinzione del profumo del vino: molto più incisivo è l'aspetto dell'intensità.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Più elevato è il valore della purezza olfattiva, più nitida potrà essere la riconoscibilità del vino, intesa soprattutto come inconfondibile espressione di un terroir vitivinicolo.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nella valutazione della qualità di un vino, nella scheda a punti ogni passaggio va valutato in riferimento alla categoria di appartenenza del vino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda di valutazione a punteggio, il parametro di purezza ed eleganza olfattiva ha un coefficiente di correzione (peso%) uguale a quello dell’aspetto del vino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La sensazione di calore che si percepisce nel vino dipende completamente dalla quantità di alcol.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punti, le considerazioni finali hanno un peso del 20%.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punteggio l’esame gusto-olfattivo rappresenta il 40% del punteggio totale?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Un vino poco equilibrato non presenta margini di miglioramento qualitativo.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "I profumi secondari del vino sono più qualitativi dei profumi terziari?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "In molti hanno tentato di definire il concetto di qualità del vino, delle definizioni sotto indicate quale ritenete la più espressiva?",
+"options": [
+"La qualità può essere provata, contestata, piuttosto che definita",
+"La qualità di un vino si prova, più che dimostrarla",
+"La qualità di un vino è più facile da riconoscere che definire",
+"Tutte e tre le precedenti definizioni sono corrette"
+],
+"answer": "Tutte e tre le precedenti definizioni sono corrette"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punti, un vino spumante avente bollicine fini numerose e persistenti all'esame visivo ottiene un punteggio minimo di 9?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il profumo di smalto o vernice è diretta conseguenza della sosta in barrique del vino?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punti, qual è il peso (valore %) dell'esame olfattivo del vino?",
+"options": [
+"10%",
+"20%",
+"30%",
+"40%"
+],
+"answer": "30%"
+},
+{
+"categoria": "Generale",
+"question": "Chi ha detto: \"una delle più grandi difficoltà in degustazione è saper apprezzare (quindi valutare) ciascun vino all'interno della propria categoria\"?",
+"options": [
+"Anne C. Noble",
+"Luigi Veronelli",
+"Émile Peynaud"
+],
+"answer": "Émile Peynaud"
+},
+{
+"categoria": "Generale",
+"question": "Sono quelle papille che ci consentono di rilevare la diversa consistenza del vino?",
+"options": [
+"Fungiformi",
+"Caliciformi",
+"Foliate",
+"Filiformi"
+],
+"answer": "Filiformi"
+},
+{
+"categoria": "Generale",
+"question": "Il tempo che intercorre tra lo stimolo e la percezione della dolcezza è di circa?",
+"options": [
+"immediato",
+"3 secondi",
+"2 secondi",
+"1 secondo"
+],
+"answer": "1 secondo"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punteggio il coefficiente correttivo dell’armonia è 1",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda di valutazione a punteggio, il parametro della complessità e attrattiva olfattiva ha un coefficiente di correzione uguale a quello della persistenza e attrattiva gusto-olfattiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Sicilia",
+"question": "La malvasia di Lipari è un vitigno aromatico?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La presenza di profumi di pasticceria o panificazione in uno spumante ottenuto con il metodo Charmat è generalmente inferiore rispetto a uno spumante ottenuto con rifermentazione in bottiglia?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "Nel Vin Santo Toscano si riconosce un profumo fragrante a connotazione ossidativa",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punteggio il coefficiente correttivo dell’armonia è 0.5",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punti, il peso del parametro della persistenza e attrattiva all’esame gusto-olfattivo, è 15%?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punti, un vino spumante avente bollicine fini numerose e persistenti all’esame visivo ottiene un punteggio minimo di 9?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L’identificazione della tipicità olfattiva ha maggior valore qualitativo nel vino bianco rispetto al rosato?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda di valutazione a punteggio la complessità olfattiva ha un coefficiente di correzione uguale a quello dell’aspetto visivo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La sapidità e l’effetto alcolico si avvertono meglio alla bassa temperatura?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La trasparenza non è influenzata dalla sosta in bottiglia.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Il profumo di smalto o vernice è diretta conseguenza della sosta in barrique del vino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punti, all’esame gusto-olfattivo si valuta: l’intensità e la struttura, l’equilibrio, l’espressività e l’eleganza oltre che la persistenza e l’attrattiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "La complessità olfattiva è influenzata dall’intensità olfattiva.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L’odore di pipì di gatto è la migliore espressione di tipicità del vino da uva sauvignon?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Per stabilire il punteggio dell’aspetto visivo del vino, la tonalità ha una maggiore rilevanza rispetto alla lucentezza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punti, qual è il peso (valore %) dell’esame olfattivo del vino?",
+"options": [
+"10%",
+"20%",
+"30%",
+"40%"
+],
+"answer": "30%"
+},
+{
+"categoria": "Generale",
+"question": "Quante diverse tonalità di colore è in grado di distinguere una persona?",
+"options": [
+"Circa 150",
+"Circa 150-180",
+"Circa 100",
+"Circa 180-200"
+],
+"answer": "Circa 180-200"
+},
+{
+"categoria": "Generale",
+"question": "Il tempo che intercorre tra lo stimolo e la percezione dell’amarezza è di circa?",
+"options": [
+"1 secondo",
+"3 secondi",
+"2 secondi",
+"È immediato"
+],
+"answer": "3 secondi"
+},
+{
+"categoria": "Generale",
+"question": "Nella scheda a punteggio ha un’incidenza del 10% sul totale:",
+"options": [
+"Intensità, struttura",
+"Intensità olfattiva",
+"Armonia complessiva",
+"Aspetto"
+],
+"answer": "Aspetto"
+},
+{
+"categoria": "Veneto",
+"question": "Nella DOP Lison-Pramaggiore sono ammessi, minimo 85%, i vitigni carmenere, malbech e petit verdot",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "L’uva Terrano rientra nella DOC Friuli Colli Orientali.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Nella zona del Soave i vini ottenuti dalle colline (basaltiche o calcaree) trattengono una migliore pienezza gustativa, anche in freschezza, rispetto a quelli della piana alluvionale",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Veneto",
+"question": "La zona di produzione del Prosecco DOC comprende anche le provincie di Verona, Vicenza, Venezia e Trieste",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Il Bardolino Novello si ottiene con macerazione carbonica per almeno l’85%",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Veneto",
+"question": "Nella zona di Soave il vitigno garganega, se coltivato su suolo calcareo, offre vini di grande eleganza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Il Refosco di Prepotto è generalmente più strutturato dello Schiopettino di Faedis.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Nella DOC Friuli Isonzo la zona Rive di Giare ha clima più caldo della Rive Alte",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "La DOC Friuli Latisana è un cuscinetto di territorio tra Friuli Annia e Friuli Aquileia",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "La coltivazione dello schiopettino nero si concentra nella provincia di Gorizia",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Un vino viscoso è molto ricco, in particolare, di:",
+"options": [
+"Alcol",
+"Acidi",
+"Sostanze sapide",
+"Zuccheri"
+],
+"answer": "Zuccheri"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Nel Friuli Latisana DOC è ammessa in etichetta l’indicazione dei vitigni:",
+"options": [
+"Picolit",
+"Tazzelenghe",
+"Malvasia istriana"
+],
+"answer": "Malvasia istriana"
+},
+{
+"categoria": "Veneto",
+"question": "Sono affermazioni corrette parlando del vitigno glera coltivato in Veneto:",
+"options": [
+"Ha grappoli lunghi e spargoli",
+"Prosecco verde è un biotipo",
+"Ha maturazione molto precoce"
+],
+"answer": "Ha grappoli lunghi e spargoli"
+},
+{
+"categoria": "Veneto",
+"question": "Veneto. Sono vini DOP in cui il vitigno principale è la corvina:",
+"options": [
+"Bardolino, Valpolicella",
+"Bardolino, Montello",
+"Piave, Valpolicella"
+],
+"answer": "Bardolino, Valpolicella"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Il terreno delle Grave del Friuli è descrivibile come:",
+"options": [
+"Una miscela di arenaria e argilla",
+"Una miscela di calcare e argilla",
+"Terreno intriso di ciottoli e ghiaia portato a valle dalle acque"
+],
+"answer": "Terreno intriso di ciottoli e ghiaia portato a valle dalle acque"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "In Friuli Venezia Giulia il terrano del Carso e Terrano d’Istria sono due vitigni diversi",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Il Breganze Torcolato, da uva vespaiola, è prodotto nelle versioni secco, abboccato e dolce.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Il Bianco di Custoza ha profumi che ricordano la salvia, la mimosa, l’acacia e fiori del mandorlo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Veneto",
+"question": "Il Garda DOC Chiaretto Classico prevede, tra le uve, barbera, sangiovese e teroldego.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "La tipologia Colli Orientali del Friuli Cialla Verduzzo friulano non esiste.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Il Breganze Torcolato, da uva vespaiola, deve il nome dall’usanza di attorcigliare il pedicello del grappolo?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "I vigneti posti in prossimità del Tagliamento sono magri e molto permeabili, chiamati 'magredi'; i vini qui prodotti sono ricchi di estratto e molto profumati.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Veneto",
+"question": "L'ormella è un vitigno autoctono impiegato nella produzione del Torchiato di Fregona DOCG.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Il vitigno garganega coltivato in Veneto ha un germogliamento precoce",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Il vitigno autoctono a bacca nera più coltivato in Friuli Venezia Giulia è lo schiopettino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "In Veneto il Colli di Conegliano Refrontolo Passito è un rosso dal gusto 'dolce' ottenuto da uve:",
+"options": [
+"Marzemino",
+"Raboso del Piave",
+"Incrocio Manzoni 2.15"
+],
+"answer": "Marzemino"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Sono affermazioni false parlando del vitigno verduzzo coltivato in Friuli Venezia Giulia:",
+"options": [
+"Malaga è un suo sinonimo",
+"Ha grappolo piccolo",
+"È autoctono"
+],
+"answer": "Malaga è un suo sinonimo"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "I terreni sabbioso-argillosi della DOC Friuli-Aquileia offrono una buona mineralità gusto-olfattiva ai vini ottenuti da friulano, quale altro vitigno trova ideale coltivazione?",
+"options": [
+"Pignolo",
+"Tazzelenghe",
+"Schiopettino",
+"Refosco dal peduncolo rosso"
+],
+"answer": "Refosco dal peduncolo rosso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "In quale DOC del Friuli VG, il vitigno friulano non trova produzione",
+"options": [
+"Collio",
+"Colli Orientali del Friuli",
+"Carso"
+],
+"answer": "Carso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Sono affermazioni corrette parlando del vitigno terrano coltivato in Friuli Venezia Giulia:",
+"options": [
+"È usato nella DOC Friuli Isonzo",
+"Dà vino poco colorato",
+"È sinonimo di Cagnina"
+],
+"answer": "È sinonimo di Cagnina"
+},
+{
+"categoria": "Veneto",
+"question": "I vini con denominazione Valpolicella Ripasso sono macerati sulle vinacce residue della preparazione dei vini Amarone della Valpolicella e Recioto della Valpolicella?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Veneto",
+"question": "Il moscato giallo nei Colli Euganei si chiama anche sirio oppure fiori d’arancio?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "San Floriano, nella DOC Collio, è un cru di malvasia istriana.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "La vitovska è un vitigno a bacca nera coltivato in Friuli Venezia Giulia che può considerarsi autoctono.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Tra le principali macrozone vitivinicole del Veneto troviamo il Bellunese e il Trevigiano.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L’equilibrio gustativo del vino non ha riflessi sulla gradevolezza olfattiva.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Veneto",
+"question": "Nella zona di Soave il vitigno garganega, se coltivato su suolo calcareo, offre vini con struttura robusta.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "L'uva ribolla gialla ha una maturazione più precoce rispetto al verduzzo friulano e al picolit.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "In Friuli Venezia Giulia è diffusa una variante del sistema di allevamento sylvoz, il suo nome è Casarsa.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Veneto",
+"question": "In Veneto, il nome del vino Recioto deriva da:",
+"options": [
+"Regio: vino destinato alla corte d'Austria",
+"Recia: la parte più alta del grappolo, quella meglio esposta",
+"Recia: nome dialettale dell'uva corvina"
+],
+"answer": "Recia: la parte più alta del grappolo, quella meglio esposta"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "È un vitigno autoctono del Friuli Venezia Giulia:",
+"options": [
+"Sauvignon",
+"Pinot grigio",
+"Ribolla gialla",
+"Traminer aromatico"
+],
+"answer": "Ribolla gialla"
+},
+{
+"categoria": "Friuli-Venezia Giulia",
+"question": "Friuli Venezia Giulia. Nella DOCG Rosazzo il disciplinare indica come obbligatori i vitigni:",
+"options": [
+"Sauvignon",
+"Ribolla gialla",
+"Pinot grigio"
+],
+"answer": "Sauvignon"
+},
+{
+"categoria": "Toscana",
+"question": "In Toscana il vitigno vermentino si esprime al meglio nelle zone litoranee",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "La Vernaccia di San Gimignano è l’unico vino bianco DOCG della Toscana.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Il Chianti è ottenuto principalmente da uva sangiovese",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "In Toscana, a Montalcino, si coltiva il moscato bianco",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Liguria",
+"question": "Liguria. Una delle caratteristiche organolettiche del vino Ormeasco di Pornassio è la robusta struttura tannica",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. La versione Val d’Arbia Vin Santo Riserva DOC impiega l’uva malvasia bianca lunga per almeno il 70%",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Montecucco Sangiovese DOCG Riserva deve sostare in legno per 24 mesi",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Il sangiovese forte e il sangiovese romagnolo a cannello lungo sono dei biotipi identici.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Liguria",
+"question": "In Liguria mataossu e buzzetto sono lo stesso vitigno",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Liguria",
+"question": "Liguria. La Costa dei Fieschi è una sottozona della DOC Riviera Ligure di Ponente?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Quanti mesi di maturazione in legno sono previsti per il Chianti Classico Gran Selezione?",
+"options": [
+"12 mesi",
+"18 mesi",
+"24 mesi",
+"Non è indicata la sosta in legno"
+],
+"answer": "Non è indicata la sosta in legno"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Qual è il periodo minimo di affinamento in legno per il Brunello di Montalcino DOCG?",
+"options": [
+"4 anni",
+"3 anni",
+"2 anni"
+],
+"answer": "2 anni"
+},
+{
+"categoria": "Liguria",
+"question": "Sono affermazioni corrette parlando del vitigno pigato coltivato in Liguria:",
+"options": [
+"Pigau è un clone",
+"Matura molto tardi",
+"Ha stretta parentela con la favorita"
+],
+"answer": "Ha stretta parentela con la favorita"
+},
+{
+"categoria": "Toscana",
+"question": "Sono affermazioni corrette parlando del vitigno trebbiano toscano coltivato in Toscana:",
+"options": [
+"Ha grappolo grande",
+"Ha origine greche",
+"Pulce è un suo sinonimo"
+],
+"answer": "Ha origine greche"
+},
+{
+"categoria": "Liguria",
+"question": "Liguria. È un vitigno che il disciplinare indica come obbligatorio per l'elaborazione del Colline di Levanto bianco DOC:",
+"options": [
+"Trebbiano toscano",
+"Scimiscià",
+"Bosco"
+],
+"answer": "Bosco"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Il vitigno principale del Montecarlo Bianco DOC è il trebbiano toscano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "In Toscana il territorio della DOC Cortona trova nel vitigno grechetto un ottimo interprete per produrre vini delicatamente fruttati e floreali, con equilibrate note gustative di freschezza e sapidità.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Tra le tipologie produttive del Moscadello di Montalcino c'è lo Spumante",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Liguria",
+"question": "In Liguria i terreni argillosi della Riviera Ligure di Ponente danno al Vermentino una spiccata mineralità.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Il Vin Santo di Montalcino è ottenuto con uve trebbiano toscano e malvasia bianca lunga.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Liguria",
+"question": "Liguria. Massaretta e pollera sono entrambi vitigni a bacca nera",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. La DOC Montecarlo contempla le versioni produttive Sauvignon e Vermentino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. La zona di produzione del Brunello di Montalcino è quella della sola estensione territoriale del comune di Montalcino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Liguria",
+"question": "Liguria. Il rossese di Campochiesa è più coltivato nella DOC Riviera Ligure di Ponente che a Dolceacqua",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "In Toscana il massaretta è un vitigno a bacca nera coltivato in provincia di Massa Carrara",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Liguria",
+"question": "È coltivato in Liguria e ha grappolo spargolo e buccia spessa?",
+"options": [
+"Bosco",
+"Albarola",
+"Pigato"
+],
+"answer": "Bosco"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. È il vitigno che da disciplinare è obbligatorio nella DOC Val di Cornia:",
+"options": [
+"Vermentino bianco",
+"Ansonica",
+"Malvasia bianca"
+],
+"answer": "Vermentino bianco"
+},
+{
+"categoria": "Toscana",
+"question": "In Toscana il vitigno syrah trova coltivazione più estesa nella provincia di:",
+"options": [
+"Siena",
+"Firenze",
+"Arezzo"
+],
+"answer": "Arezzo"
+},
+{
+"categoria": "Toscana",
+"question": "In quale denominazione di origine della Toscana è molto diffuso il sistema di allevamento a cordone speronato?",
+"options": [
+"Candia dei Colli Apuani",
+"Montalcino",
+"Cortona"
+],
+"answer": "Montalcino"
+},
+{
+"categoria": "Liguria",
+"question": "In Liguria, l’Ormeasco di Pornassio Sciac-trà è un vino:",
+"options": [
+"Rosso secco",
+"Rosato dolce",
+"Rosato secco"
+],
+"answer": "Rosato secco"
+},
+{
+"categoria": "Toscana",
+"question": "La vernaccia di Oristano coltivata in Sardegna e la vernaccia di San Gimignano coltivata in Toscana sono lo stesso vitigno?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "Le macrozone vitivinicole della Toscana sono il Chianti, la Costa tirrenica e le colline della Toscana Centrale.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Nell’Elba DOC si può indicare indifferentemente in etichetta Sangiovese o Sangioveto?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. Il Vin Santo 'Occhio di Pernice' si produce minimo con l'80% di sangiovese.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "In Toscana, a Montalcino, si coltiva il moscato bianco?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Liguria",
+"question": "Il vitigno nebbiolo è diffusamente coltivato a Dolceacqua, in Liguria.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Toscana",
+"question": "Toscana. La versione Val d’Arbia Vin Santo Riserva DOC impiega l’uva malvasia bianca lunga per almeno il 70%.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Liguria",
+"question": "L’uva ormeasco coltivata in Liguria non è altro che l'uva dolcetto.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Liguria",
+"question": "In quale DOC della Liguria si utilizza il termine 'numeranze' per indicare una menzione geografica?",
+"options": [
+"Cinqueterre",
+"Colline di Levanto",
+"Dolceacqua"
+],
+"answer": "Dolceacqua"
+},
+{
+"categoria": "Liguria",
+"question": "Sono affermazioni false parlando di vermentino in Liguria.",
+"options": [
+"Ha maturazione media",
+"Rolle è un sinonimo",
+"Si coltiva nella DOC Pornassio"
+],
+"answer": "Si coltiva nella DOC Pornassio"
+},
+{
+"categoria": "Liguria",
+"question": "Nel versante occidentale della Liguria gli areali vitati sono in genere caratterizzati da terreni:",
+"options": [
+"Ricchi di arenaria",
+"Ricchi di calcare",
+"Ricchi di argilla"
+],
+"answer": "Ricchi di calcare"
+},
+{
+"categoria": "Liguria",
+"question": "Sono affermazioni false parlando del vitigno rossese coltivato in Liguria:",
+"options": [
+"Diffuso nel Ponente ligure",
+"È sempre usato in uvaggio",
+"Matura tardivamente"
+],
+"answer": "È sempre usato in uvaggio"
+},
+{
+"categoria": "Toscana",
+"question": "Sono affermazioni corrette parlando del vitigno aleatico coltivato in Toscana, all’Elba:",
+"options": [
+"Dà vini molto tannici",
+"Matura a fine settembre",
+"Ha grappolo grande"
+],
+"answer": "Matura a fine settembre"
+},
+{
+"categoria": "Marche",
+"question": "Marche. Maceratino è un tipico vitigno della DOC Colli Maceratesi, il cui altro nome è montecchiese",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Marche",
+"question": "Marche. Il Colli Pesaresi Focara Pinot nero è Riserva anche se vinificato in bianco",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Emilia-Romagna. Il Bosco Eliceo Fortana DOC può essere prodotto nelle versioni, secco, semisecco, amabile e dolce",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Marche",
+"question": "Il vitigno a bacca bianca più diffuso nelle Marche è il verdicchio",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Nella DOC Colli di Faenza si impiega pinot bianco in purezza",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Generale",
+"question": "Il profumo fragrante nasce dalla fermentazione malolattica",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Il Reggiano Spumante DOP è ottenuto da vinificazione in bianco di uve lambrusco Marani, di Sorbara, montericco, maestri e malbo gentile",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Marche",
+"question": "Marche. La DOCG Vernaccia di Serrapetrona è una denominazione “a caduta”, come il Brunello di Montalcino e il Vino Nobile di Montepulciano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "La sottozona Bertinoro è riserva solo al Romagna Sangiovese.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Il sangiovese, in Romagna, riesce a produrre vini molto fruttati, con struttura tannica e senza finale amaricante nei terreni collinari ricchi di calcare e argilla, e con poca disponibilità idrica.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Marche",
+"question": "In quale DOC delle Marche si produce la tipologia Sangiovese Rosato, menzionata anche in etichetta?",
+"options": [
+"Colli Pesaresi",
+"Colli Maceratesi",
+"Non esiste la tipologia"
+],
+"answer": "Non esiste la tipologia"
+},
+{
+"categoria": "Marche",
+"question": "Marche. Sono versioni produttive della DOC Colli Maceratesi:",
+"options": [
+"Ribona Riserva e Ribona Passito",
+"Ribona e Ribona Rosato",
+"Ribona Spumante e Ribona"
+],
+"answer": "Ribona Spumante e Ribona"
+},
+{
+"categoria": "Marche",
+"question": "È il vitigno principale utilizzato nell'elaborazione del San Ginesio Rosso DOC:",
+"options": [
+"Merlot",
+"Ciliegiolo",
+"Sangiovese"
+],
+"answer": "Sangiovese"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Romagna Albana DOCG si può produrre nelle tipologie:",
+"options": [
+"Secco, amabile, dolce, passito",
+"Secco, abboccato, amabile, dolce, passito e passito riserva",
+"Secco, amabile, dolce, passito e passito riserva"
+],
+"answer": "Secco, amabile, dolce, passito e passito riserva"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "L’uva bianca più coltivata in Romagna è:",
+"options": [
+"Trebbiano romagnolo",
+"Albana di Romagna",
+"Pagadebit"
+],
+"answer": "Trebbiano romagnolo"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Emilia. L’Ortrugo dei Colli Piacentini è un vino con personalità gustativa potente, ricca di tannino, grazie alla presenza di un 15% di cabernet sauvignon?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Marche",
+"question": "Marche. Il Colli Pesaresi Focara Pinot nero può essere anche spumantizzato in bianco?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Emilia. Il Lambrusco di Sorbara può essere ottenuto da rifermentazione naturale in bottiglia?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "In Emilia, nella DOC Colli Bolognesi, il pignoletto non è prodotto in versione Spumante, mentre nella DOCG Colli Bolognesi Classico è consentito.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Marche",
+"question": "Il verdicchio bianco impiegato a Jesi è differente rispetto a quello usato a Matelica.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Marche",
+"question": "Nella DOC Colli Pesaresi Roncaglia Spumante il pinot nero si vinifica in rosso",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Romagna. I biotipi di sangiovese sono cinque: sangiovese piccolo, sangiovese grosso, prugnolo gentile, brunello e morellino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Marche",
+"question": "Le versioni della DOCG Offida sono tre: Passerina, Pecorino e Sangiovese.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Marche",
+"question": "Sono affermazioni false parlando di vitigno verdicchio bianco coltivato nelle Marche:",
+"options": [
+"Gradisce terreni argillosi",
+"Marino è un suo sinonimo",
+"È alloctono"
+],
+"answer": "È alloctono"
+},
+{
+"categoria": "Marche",
+"question": "Marche. Quali sono i vitigni base per le DOC (1)Falerio e (2)Esino Bianco?",
+"options": [
+"1)Trebbiano, 2)Verdicchio",
+"Entrambi trebbiano",
+"1)Trebbiano, 2)Biancame"
+],
+"answer": "1)Trebbiano, 2)Verdicchio"
+},
+{
+"categoria": "Marche",
+"question": "Qual è la provincia delle Marche in cui c’è minore coltivazione di uva sangiovese?",
+"options": [
+"Ancona",
+"Pesaro Urbino",
+"Macerata"
+],
+"answer": "Macerata"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "In Emilia, nella DOC Reggiano Lambrusco è ammesso l’impiego del vitigno:",
+"options": [
+"Sgavetta",
+"Lambrusco marani",
+"Fogarina"
+],
+"answer": "Lambrusco marani"
+},
+{
+"categoria": "Marche",
+"question": "Marche. Il Terre di Offida Pecorino è prodotto anche nella tipologia spumante.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "L’equilibrio gustativo del vino non ha riflessi sulla gradevolezza olfattiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Emilia. Il Colli di Parma Spumante impiega i vitigni pinot nero, chardonnay, pinot bianco: da zero al 100%.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Il Lambrusco di Sorbara DOC, prodotto in Emilia, può essere fermentato/rifermentato in bottiglia o in autoclave",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Il lambrusco di sorbara coltivato in Emilia dà vini dai colori più colorati rispetto al lambrusco grasparossa.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Fortana del Taro è una DOC dell’Emilia Romagna",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "La tonalità del colore del vino non dipende dal vitigno",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Marche",
+"question": "Marche. Nella produzione della Vernaccia di Serrapetrona DOCG, all’atto della vendemmia non possono essere vinificate più del 60% delle uve che comporranno la cuvée finale.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Marche",
+"question": "Il Lacrina di Morro d’Alba ha la versione Passito",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Marche",
+"question": "La coltivazione di cabernet sauvignon nelle Marche è concentrata nella provincia di Macerata",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Emilia-Romagna. Sono vitigni contemplati nel disciplinare della DOC Colli Bolognesi, sottozona Bologna:",
+"options": [
+"Sauvignon",
+"Pignoletto",
+"Albana"
+],
+"answer": "Sauvignon"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "La possibilità di ottenere in Emilia-Romagna i vini in versione Frizzante è prerogativa:",
+"options": [
+"Dell'Emilia-Romagna",
+"Della Romagna",
+"Dell'Emilia"
+],
+"answer": "Dell'Emilia"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Siamo in Emilia: barbera 55-70% e croatina 30-45%; qual è la DOC?",
+"options": [
+"Colli Bolognesi",
+"Gutturnio",
+"Bosco Eliceo"
+],
+"answer": "Gutturnio"
+},
+{
+"categoria": "Emilia-Romagna",
+"question": "Sono affermazioni corrette parlando del vitigno cagnina, così chiamato e coltivato, in Emilia-Romagna:",
+"options": [
+"È usato nella DOC Colli di Faenza",
+"È sinonimo di terrano",
+"Dà vini tannici e robusti"
+],
+"answer": "È sinonimo di terrano"
+},
+{
+"categoria": "Marche",
+"question": "In quale DOC delle Marche si impiega l’uva pinot nero:",
+"options": [
+"Rosso Piceno Superiore",
+"Colli Pesaresi, sottozona Focara e Roncaglia",
+"Colli Maceratesi Rosso",
+"Esino"
+],
+"answer": "Colli Pesaresi, sottozona Focara e Roncaglia"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Il Moscato di Terracina spumante non deve contenere il 100% di uva moscato",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. L’Aleatico di Gradoli Liquoroso Riserva deve sostare minimo 2 anni in botti di legno di rovere, della capacità massima di 250 litri",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Nella DOC Colli Albani il vitigno malvasia bianca di Candia è chiamato malvasia rossa",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. Nella DOC Spoleto il vitigno principale è il trebbiano spoletino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. La DOP Spoleto prevede solo l’impiego di uva trebbiano spoletino.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Nel Lazio il bombino bianco non è vinificato in purezza.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. La DOC Orvietano Rosso contempla la versione con 85% di Aleatico",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Umbria",
+"question": "Montefalco Grechetto è una Doc",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Il Nettuno Bianco DOC utilizza in prevalenza procanico e bellone",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. ll Moscato di Terracina Spumante deve essere prodotto con il Metodo Martinotti",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Il vitigno ciliegiolo coltivato nel Lazio è maggioritario nella DOC:",
+"options": [
+"Genazzano",
+"Cori",
+"Colli della Sabina"
+],
+"answer": "Genazzano"
+},
+{
+"categoria": "Umbria",
+"question": "Sono affermazioni false parlando del vitigno trebbiano toscano coltivato in Umbria:",
+"options": [
+"Procanico è un sinonimo",
+"Ha grappolo piccolo",
+"È di origine etrusca"
+],
+"answer": "Ha grappolo piccolo"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. È una tipologia produttiva contemplata nel disciplinare dell’Orvieto DOC:",
+"options": [
+"Passito",
+"Riserva",
+"Abboccato"
+],
+"answer": "Abboccato"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. Oltre al trebbiano, quale dei seguenti vitigni concorre obbligatoriamente all'elaborazione dell'Assisi bianco?",
+"options": [
+"Grechetto",
+"Malvasia bianca",
+"Verdello"
+],
+"answer": "Grechetto"
+},
+{
+"categoria": "Lazio",
+"question": "Trebbiano toscano, trebbiano verde e trebbiano giallo sono impiegati nella DOC Velletri",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. Nel Torgiano Vendemmia Tardiva le uve devono appassire solo in pianta.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Nel Lazio l'uva montepulciano, nella DOC Tuscia, prende il nome di violetto",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Umbria",
+"question": "In Umbria i territori del comune di Perugia non rientrano nella DOC Colli del Trasimeno",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. Il Trasimeno Gamay può essere prodotto nella versione “Novello” e “Riserva”",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "La Malvasia del Lazio, detta anche malvasia puntinata, dà vini mediamente più raffinati rispetto a quelli ottenuti con malvasia bianca di Candia",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. Nella DOC Alto Tiberini il Grechetto lo si ottiene anche nella tipologia “Riserva”?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Lazio",
+"question": "Nel Lazio la DOC Colli Etruschi Viterbesi si impiega il vitigno grechetto, che ha la particolarità di essere a bacca rossa, anziché bianca",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Nella fase di maturazione delle uve destinate alla produzione del Cannellino di Frascati DOCG è obbligatorio che almeno il 50% degli acini siano affetti da Botrytis Cinerea?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. La DOP Cerveteri prevede la versione Cerveteri Trebbiano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Il Frascati Superiore DOCG non può fregiarsi della menzione Riserva.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Un tannino rugoso, accompagnato anche da un po’ di sapore amarognolo e da un effetto pelosità del carciofo, potrebbe essere conseguente a?",
+"options": [
+"Uve troppo torchiate",
+"Uve non mature",
+"Uso di botti vecchie",
+"Eccessiva sosta in legno nuovo"
+],
+"answer": "Uve troppo torchiate"
+},
+{
+"categoria": "Umbria",
+"question": "Sono affermazioni false parlando del vitigno grechetto coltivato in Umbria",
+"options": [
+"C'è il grechetto di. Todi",
+"È considerato autoctono",
+"È usato nella DOC Spoleto"
+],
+"answer": "È usato nella DOC Spoleto"
+},
+{
+"categoria": "Umbria",
+"question": "Sono affermazioni corrette parlando del sangiovese coltivato in Umbria:",
+"options": [
+"Non matura precocemente",
+"Uva tosca è un sinonimo",
+"Ha grappolo cilindrico"
+],
+"answer": "Non matura precocemente"
+},
+{
+"categoria": "Lazio",
+"question": "Nel Lazio l’uva greco è usata come monovitigno nella DOC:",
+"options": [
+"Vignanello",
+"Atina",
+"Nettuno"
+],
+"answer": "Vignanello"
+},
+{
+"categoria": "Lazio",
+"question": "Quali sono le quattro aree vitivinicole del Lazio?",
+"options": [
+"Vulsinia, Ciociaria, Agro Pontino, Colli della Sabina",
+"Vulsinia, Ciociaria, Agro Pontino, Castelli Romani",
+"Vulsinia, Ciociaria, Agro Pontino, Colli Etruschi Viterbesi"
+],
+"answer": "Vulsinia, Ciociaria, Agro Pontino, Castelli Romani"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Le uve destinate alla produzione del Cannellino di Frascati DOCG non possono essere sovramaturate artificialmente.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. L’Orvieto superiore muffa nobile è prodotto solo nella versione “classico”",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. Il Trasimeno Gamay può essere prodotto anche nella versione “Riserva Superiore”",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. Le tipologie dell’Orvieto sono: secco, abboccato, amabile, dolce, superiore, vendemmia tardiva, superiore muffa nobile e spumante",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Il Cannellino di Frascati DOCG non si può produrre nel territorio del comune di Monte Porzio Catone",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. Il Moscato di Terracina passito deve contenere l’85% minimo di uva moscato",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Lazio",
+"question": "Il vitigno trebbiano giallo coltivato nel Lazio è chiamato anche rossetto",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Lazio",
+"question": "Non è un vitigno indicato come obbligatorio nel disciplinare della DOC Aprilia Rosso:",
+"options": [
+"Sangiovese",
+"Merlot",
+"Abbuoto"
+],
+"answer": "Abbuoto"
+},
+{
+"categoria": "Lazio",
+"question": "Il vino Castelli Romani DOC si produce nelle versioni:",
+"options": [
+"Rosso e Rosato",
+"Solo Bianco",
+"Bianco, Rosso e Rosato"
+],
+"answer": "Bianco, Rosso e Rosato"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. È una tipologia produttiva della DOC Bianco Capena:",
+"options": [
+"Frizzante",
+"Riserva",
+"Superiore"
+],
+"answer": "Superiore"
+},
+{
+"categoria": "Umbria",
+"question": "Umbria. È il vitigno più impiegato nelle DOC (1)Montefalco Rosso e (2)Assisi Rosso:",
+"options": [
+"(1)Sangiovese, (2)Gamay",
+"Entrambe Sangiovese",
+"(1)Sagrantino, (2)Sangiovese"
+],
+"answer": "Entrambe Sangiovese"
+},
+{
+"categoria": "Lazio",
+"question": "Lazio. A quale personaggio è legata la storia del vino Est Est Est di Montefiascone?",
+"options": [
+"Papa Paolo III Farnese",
+"Sante Lancerio",
+"Vescovo Defuk"
+],
+"answer": "Vescovo Defuk"
+},
+{
+"categoria": "Piemonte",
+"question": "Nella DOC Valli Ossolane il nebbiolo è chiamato pugnet",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "Nei Colli Tortonesi il dolcetto è chiamato 'nibiò'",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Enfer d'Arvier e Arnad-Montjovet sono ottenuti con lo stesso vitigno",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "In Valle d'Aosta il gamay e il gamaret sono lo stesso vitigno",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Generale",
+"question": "Terralba è il nome di una Doc del Piemonte",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "La DOC Strevi prevede solo l’impiego di uva moscato bianco appassita",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Piemonte",
+"question": "Il Langhe Nebbiolo deve maturare 12 mesi in legno",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "Il vitigno più coltivato in Piemonte è il nebbiolo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "Nella produzione del Barolo Chinato oltre all'aggiunta di erbe, china e alcol, si può impiegare anche lo zucchero.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Piemonte",
+"question": "Il Freisa di Chieri DOC non prevede la tipologia 'spumante dolce'",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Sono vitigni internazionali coltivati in Valle d'Aosta:",
+"options": [
+"Viognier",
+"Merlot",
+"Sauvignon"
+],
+"answer": "Merlot"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "È un vitigno estraneo alla produzione della DOP Valle d'Aosta:",
+"options": [
+"Fumin",
+"Gamay",
+"Grignolino"
+],
+"answer": "Grignolino"
+},
+{
+"categoria": "Piemonte",
+"question": "Sono due vitigni che possono accompagnare l’uva nebbiolo nella DOC Boca",
+"options": [
+"Vespolina, dolcetto",
+"Uva rara, barbera",
+"Vespolina, uva rara"
+],
+"answer": "Vespolina, uva rara"
+},
+{
+"categoria": "Piemonte",
+"question": "Sono i vitigni principali delle DOCG (1)Barbaresco (2)Roero",
+"options": [
+"Barbera per entrambe",
+"Nebbiolo per entrambe",
+"(1)Nebbiolo, (2)Barbera"
+],
+"answer": "Nebbiolo per entrambe"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Quali sono le tipologie Superiore della DOC Valle d’Aosta:",
+"options": [
+"Chambave",
+"Rosato",
+"Fumin"
+],
+"answer": "Chambave"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Il Valle d'Aosta Chambave è un vino bianco secco",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Il Valle d’Aosta Arnad-Montjovet è a base di uva nebbiolo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "In Valle d'Aosta blanc de Nus è un sinonimo del vitigno Vien de Nus",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Il pinot nero in Valle d'Aosta può essere anche vinificato in bianco senza perdere i requisiti della DOP.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Piemonte",
+"question": "L'Alta Langa è una macrozona viticola e una DOCG vocata alla produzione di spumanti metodo charmat a base di moscato bianco",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "Il Carema si può definire 'Nebbiolo di Montagna'.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Piemonte",
+"question": "La DOC Alba è una denominazione di ricaduta del territorio langhigiano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Il Valle d'Aosta Donnas non si produce nella versione Riserva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "In Valle d'Aosta i vigneti di Morgex si trovano su terreno:",
+"options": [
+"Sabbiosi e ricchi di scheletro",
+"Marnosi con silex",
+"Di natura granitica"
+],
+"answer": "Di natura granitica"
+},
+{
+"categoria": "Piemonte",
+"question": "Quale area viticola non si trova nella macro area dell'Alto Piemonte?",
+"options": [
+"Lessona",
+"Bramaterra",
+"Verduno Pelaverga"
+],
+"answer": "Verduno Pelaverga"
+},
+{
+"categoria": "Piemonte",
+"question": "Sono macrozone di produzione dei vini del Piemonte?",
+"options": [
+"Monferrato Astigiano, Saluzzese e Torinese, Roero, Langhe, Alto Piemonte, Alta Langa, Asti, Acqui, Alto Monferrato",
+"Monferrato Astigiano, Colli Tortonesi, Roero, Langhe, Alto Piemonte, Alta Langa, Asti, Acqui, Alto Monferrato",
+"Saluzzese e Torinese, Roero, Langhe, Alto Piemonte, Alta Langa, Colli Astiani, Acqui, Alto Monferrato, Terre Alfieri"
+],
+"answer": "Monferrato Astigiano, Saluzzese e Torinese, Roero, Langhe, Alto Piemonte, Alta Langa, Asti, Acqui, Alto Monferrato"
+},
+{
+"categoria": "Piemonte",
+"question": "È il vitigno che accomuna le DOC Strevi e Loazzolo:",
+"options": [
+"Erbaluce",
+"Moscato bianco",
+"Cortese"
+],
+"answer": "Moscato bianco"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Alcuni autori sono propensi a individuare nel Vallese, in Svizzera, il luogo di origine del prié blanc",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Il Valle d’Aosta Enfer d’Arvier è a base di pinot nero",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "Nell'etichetta dell'Asti si può indicare la dizione 'Metodo Martinotti'.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Piemonte",
+"question": "La zona di produzione del Barbaresco non contempla alcuna parte del territorio del comune di Alba.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Piemonte",
+"question": "È un vino ottenuto da uva moscato bianco:",
+"options": [
+"Loazzolo",
+"Coste della Sesia",
+"Alba"
+],
+"answer": "Loazzolo"
+},
+{
+"categoria": "Valle d'Aosta",
+"question": "Quale vitigno a bacca bianca è considerato l’unico vitigno autoctono",
+"options": [
+"Prié blanc",
+"Pinot gris",
+"Gamaret"
+],
+"answer": "Prié blanc"
+},
+{
+"categoria": "Piemonte",
+"question": "Quale areale viticolo si trova nelle Langhe?",
+"options": [
+"Asti DOCG",
+"Gattinara DOCG",
+"Alba DOC"
+],
+"answer": "Alba DOC"
+},
+{
+"categoria": "Campania",
+"question": "Nel Fiano di Avellino DOCG è ammesso un 15% di uve come coda di volpe, greco e falanghina.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "L'Ischia Rosso, siamo in Campania, per potersi fregiare della DOC deve obbligatoriamente impiegare l'uva aglianico",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "L’uva falanghina è la base per la produzione in Campania del Penisola Sorrentina Bianco Sorrento Frizzante",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "L’uva bianca della Campania più rappresentativa della DOC Campi Flegrei è la falanghina",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "La DOC della Campania Costa D’Amalfi prevede solo due sottozone: Furore e Ravello.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "In Campania, nei comuni della DOC Vesuvio l’uva coda di volpe è chiamata olivella",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Abruzzi",
+"question": "In Abruzzo la DOC Controguerra si può riportare in etichetta la dizione Controguerra Cabernet, oppure Controguerra Merlot, ma non Controguerra Montepulciano.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "Costa d’Amalfi Tramonti, elaborato in Campania, è prodotto solo in versione Rosso e Rosato",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Abruzzi",
+"question": "Il Villamagna DOC, in Abruzzo prevede la versione bianco a base di trebbiano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "I Taurasi più strutturati e tannici provengono dai vigneti che in Campania hanno sottosuolo di origine marina",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Molise",
+"question": "Sono vitigni che il disciplinare del Molise Spumante Rosato riporta come utilizzabili:",
+"options": [
+"Pino nero",
+"Montepulciano",
+"Verdicchio"
+],
+"answer": "Montepulciano"
+},
+{
+"categoria": "Abruzzi",
+"question": "Quale delle seguenti è una tipologia produttiva della DOCG Tullum?",
+"options": [
+"Passerina",
+"Cococciola",
+"Grecanico"
+],
+"answer": "Passerina"
+},
+{
+"categoria": "Molise",
+"question": "Fa parte della composizione del Biferno Rosso DOC:",
+"options": [
+"Aglianico",
+"Bovale grande",
+"Sangiovese"
+],
+"answer": "Aglianico"
+},
+{
+"categoria": "Campania",
+"question": "Forastera 45-70%, biancolella 30-55%, altri per un max del 15%; in quale DOP si trovano queste uve?",
+"options": [
+"Ischia",
+"Campi Flegrei",
+"Cilento"
+],
+"answer": "Ischia"
+},
+{
+"categoria": "Abruzzi",
+"question": "Sono affermazioni corrette parlando del vitigno pecorino coltivato in Abruzzo:",
+"options": [
+"Arquitano è un sinonimo",
+"Dà vini robusti",
+"È originario della Grecia"
+],
+"answer": "Arquitano è un sinonimo"
+},
+{
+"categoria": "Abruzzi",
+"question": "Il Cerasuolo d’Abruzzo DOC si produce anche nella tipologia Superiore?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "In Campania nella DOC Penisola Sorrentina sottozona Sorrento la delicatezza e la finezza del profumo fruttato e floreale e la sfumata nota di erbe aromatiche è apportata dalle uve pepella e biancazita.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "In Campania, nel Sannio, dall'uva scianscinoso si ottengono vini dal corredo aromatico molto fruttato, struttura potente in tannino, tanto da richiedere una prolungata sosta in vetro per equilibrarsi.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "La biancolella (vitigno a bacca bianca diffuso in Campania) ha anche dei sinonimi, alcuni di questi possono essere riportati in etichetta. Può infatti essere usato \"janculella\", ma non \"janculillo\".",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "In Campania, l’uva bianca di riferimento del Falerno del Massico DOC è il greco",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "Il Taurasi DOCG deve sottostare a una maturazione in legno di almeno un anno.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "Nel Cilento Bianco DOC è obbligatorio l'uso del vitigno trebbiano toscano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Molise",
+"question": "In Molise, il Pentro di Isernia Rosso Riserva l’impiego di montepulciano è minimo del 90%",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "Campania. Il Fiano di Avellino è una DOCG",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "Nel Fiano di Avellino DOCG la dizione \"Apianum\" significa:",
+"options": [
+"Il vino è stato ottenuto da vendemmia tardiva",
+"Il vino è stato ottenuto da vendemmia tardiva con uve attaccate da Botryris",
+"Il vino è d'origine classica"
+],
+"answer": "Il vino è d'origine classica"
+},
+{
+"categoria": "Molise",
+"question": "Molise. È il sistema di allevamento della vite più utilizzato in provincia di Campobasso:",
+"options": [
+"Tendone",
+"Sylvoz",
+"Cordone speronato"
+],
+"answer": "Tendone"
+},
+{
+"categoria": "Molise",
+"question": "Sono vitigni che il disciplinare del Molise Spumante Bianco riporta come utilizzabili:",
+"options": [
+"Montepulciano",
+"Sangiovese",
+"Tintilia"
+],
+"answer": "Montepulciano"
+},
+{
+"categoria": "Abruzzi",
+"question": "Sono sottozone della Denominazione di Origine Controllata Montepulciano d'Abruzzo",
+"options": [
+"Casauria, Terre dei Vestini, Alto Tirino, Terre dei Peligni e Teate",
+"Terre di Casauria, Vestini, Alto Mincio, Peligni e Terre di Teate",
+"Terre di Casauria, Vestini, Alto Chietino, Colline dei Peligni, Terre Teatine",
+"Casauria, Terra di Vestini, Alto Adriatico, Monti Peligni e Teramo"
+],
+"answer": "Casauria, Terre dei Vestini, Alto Tirino, Terre dei Peligni e Teate"
+},
+{
+"categoria": "Campania",
+"question": "L'aglianico coltivato in Campania è un vitigno a maturazione tardiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "In Campania l'uva fiano matura prima dell'uva greco.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Molise",
+"question": "Il Biferno Rosato Superiore impiega il montepulciano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Abruzzi",
+"question": "Il Montepulciano d’Abruzzo Colline Teramane è una DOCG dell'Abruzzo",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "In Campania, Taurasi è prodotto da uva aglianico",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Campania",
+"question": "In Campania, nella DOP Galluccio non è ammessa l’uva falanghina",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Abruzzi",
+"question": "Nella DOC Montepulciano d’Abruzzo Sottozona Terre dei Peligni l’uva montepulciano è usata minimo al 95%, nella DOCG Montepulciano d’Abruzzo Colline Teramane il minimo è 90%.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Abruzzi",
+"question": "Il Montepulciano d’Abruzzo Colline Teramane è una DOC",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Campania",
+"question": "È una DOC della Campania in cui si produce la tipologia Passito:",
+"options": [
+"Ischia",
+"Aversa",
+"Penisola Sorrentina"
+],
+"answer": "Ischia"
+},
+{
+"categoria": "Generale",
+"question": "Il profumo speziato deriva solo dalla sosta del vino in botte di legno.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "Nella produzione del vino dolce Greco di Bianco è ammesso l’uso del solo vitigno greco bianco.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Puglia",
+"question": "Nel Rosso di Cerignola è consentito l’impiego di trebbiano toscano",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Puglia",
+"question": "Il negro amaro coltivato in Puglia è un vitigno a maturazione mediamente tardiva",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Calabria",
+"question": "Il Cirò Classico comprende l’area definita storica dei comuni di Cirò, Cirò Marina e Crucoli?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "Nerello mascalese, nerello cappuccio, nerello mantellato sono tre vitigni con identità completamente diverse?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "Il Melissa Rosso contempla l'impiego anche di uve a bacca bianca",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Calabria",
+"question": "Un sistema di allevamento della vite alquanto diffuso nella DOC Savuto è l’alberello",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Basilicata",
+"question": "Il vitigno malvasia bianca di Basilicata è ammesso per produrre vini DOC e anche IGT",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Calabria",
+"question": "Nella produzione del Terre di Cosenza Sottozona Verbicaro Moscato Passito, l’uva può essere appassita anche con disidratazione?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Basilicata",
+"question": "Nel Vulture il vitigno aglianico si coltiva in terreni dalla composizione:",
+"options": [
+"Calcarea",
+"Tufacea",
+"Marnosa"
+],
+"answer": "Tufacea"
+},
+{
+"categoria": "Puglia",
+"question": "Qual è il vitigno base dello Squinzano Rosso DOC?",
+"options": [
+"Bombino nero",
+"Negroamaro",
+"Sangiovese"
+],
+"answer": "Negroamaro"
+},
+{
+"categoria": "Basilicata",
+"question": "È il vitigno base da cui si ottiene il Matera Spumante Rosè:",
+"options": [
+"Aglianico",
+"Pinot nero",
+"Primitivo"
+],
+"answer": "Primitivo"
+},
+{
+"categoria": "Basilicata",
+"question": "Sono affermazioni corrette parlando del vitigno aglianico coltivato in Basilicata:",
+"options": [
+"Matura precocemente",
+"Ha grappolo spargolo",
+"Mascolino è un suo clone"
+],
+"answer": "Mascolino è un suo clone"
+},
+{
+"categoria": "Calabria",
+"question": "Sono vitigni che da soli o congiuntamente entrano nella DOC Bivongi Bianco:",
+"options": [
+"Guardavalle e ansonica",
+"Greco bianco e pecorello",
+"Ansonica e zibibbo"
+],
+"answer": "Guardavalle e ansonica"
+},
+{
+"categoria": "Calabria",
+"question": "Nella DOC Scavigna è previsto l’impiego di riesling e pinot bianco",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Basilicata",
+"question": "L'Aglianico del Vulture Superiore non deve obbligatoriamente sostare in contenitori di legno",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "La fase dell’appassimento dell’uva greco bianco destinata alla produzione del Greco di Bianco DOC deve essere svolta solo su graticci al sole",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Puglia",
+"question": "Castel del Monte Bombino Bianco è un vino DOCG",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "La storia del vitigno greco bianco, da cui si ottiene il vino Greco di Bianco, risale all'VIII secolo a.C.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Calabria",
+"question": "Nella produzione del Cirò Rosso sono autorizzate le uve cabernet e merlot",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Puglia",
+"question": "Nel Locorotondo DOC le uve complementari devono essere solo autoctone.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Calabria",
+"question": "Le uve complementari ammesse nella produzione del Greco di Bianco sono nella misura massima del 15%",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Puglia",
+"question": "L'aglianico che si ottiene in Puglia, nella Murgia, ha più somiglianza con i vini del Vulture che quelli del Taburno.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Puglia",
+"question": "Qual è il vitigno base da cui si ottengono le DOC (1)Brindisi Rosso, (2)Barletta Rosso?",
+"options": [
+"Entrambi negroamaro",
+"Entrambi uva di Troia",
+"1)Negroamaro, 2)Uva di Troia"
+],
+"answer": "1)Negroamaro, 2)Uva di Troia"
+},
+{
+"categoria": "Basilicata",
+"question": "Non è un vitigno diffusamente coltivato in Basilicata:",
+"options": [
+"Aglianico",
+"Falanghina",
+"Sangiovese"
+],
+"answer": "Falanghina"
+},
+{
+"categoria": "Puglia",
+"question": "È il vitigno dominante nel Castel del Monte Rosso Riserva DOCG:",
+"options": [
+"Uva di Troia",
+"Negroamaro",
+"Malvasia nera di Brindisi"
+],
+"answer": "Uva di Troia"
+},
+{
+"categoria": "Puglia",
+"question": "In quale DOC della Puglia si impiega l'uva \"hermitage\"?",
+"options": [
+"Alezio",
+"Barletta",
+"Ostuni"
+],
+"answer": "Ostuni"
+},
+{
+"categoria": "Puglia",
+"question": "Nella produzione del Primitivo di Manduria DOC è proibito l’uso di uve provenienti dalle femminelle.",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Calabria",
+"question": "Nella zona di produzione del Savuto DOC il vitigno gaglioppo dolce prende il nome di arvino?",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Puglia",
+"question": "Il Matino è una DOC della Puglia ottenuta con uve negroamaro, sangiovese e malvasia nera",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Basilicata",
+"question": "L'Aglianico del Vulture Superiore Riserva deve sostare in legno, l'Aglianico del Vulture superiore no",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "Nel territorio del comune di Crotone non si può ottenere il Cirò Classico",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Puglia",
+"question": "In Puglia il negroamaro è il vitigno principale della DOC Salice Salentino Rosato",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Vero"
+},
+{
+"categoria": "Calabria",
+"question": "Verbicaro è una DOC della Basilicata",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "La DOC Terre di Cosenza contempla la tipologia Pecorino",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "Nella DOC Savuto i vigneti si collocano fino a oltre 900 metri slm",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Calabria",
+"question": "In Calabria nel territorio del comune di Cirò si può ottenere il Cirò Rosato Classico",
+"options": [
+"Vero",
+"Falso"
+],
+"answer": "Falso"
+},
+{
+"categoria": "Puglia",
+"question": "Qual è il vitigno base da cui si ottengono le DOC (1)Gioia del Colle Rosso e (2)Matino Rosso?",
+"options": [
+"1)Primitivo, 2)Negroamaro",
+"Entrambi negroamaro",
+"1)Primitivo, 2)Uva di Troia"
+],
+"answer": "1)Primitivo, 2)Negroamaro"
+},
+{
+"categoria": "Puglia",
+"question": "Nel vino Ostuni Bianco, oltre l’Impigno, quale uva viene largamente utilizzata?",
+"options": [
+"Malvasia bianca lunga",
+"Pampanuto",
+"Francavilla"
+],
+"answer": "Francavilla"
+},
+{
+"categoria": "Calabria",
+"question": "Lo Scavigna rosso ha come base il vitigno?",
+"options": [
+"Aglianico",
+"Marcigliana nera",
+"Magliocco"
+],
+"answer": "Aglianico"
+},
+{
+"categoria": "Puglia",
+"question": "È il più diffuso vitigno a bacca nera della Puglia:",
+"options": [
+"Primitivo",
+"Aglianico",
+"Sangiovese"
+],
+"answer": "Sangiovese"
+},
+{
+"categoria": "Calabria",
+"question": "È l’uva più coltivata in Calabria:",
+"options": [
+"Nerello mascalese",
+"Gaglioppo",
+"Nerello cappuccio"
+],
+"answer": "Gaglioppo"
+}
+];
+
+// ========== STATE ==========
+let quizQuestions = [];
+let currentIndex = 0;
+let selectedOption = null;
+let answers = []; // { question, selected, correct, isCorrect }
+let timerInterval = null;
+let elapsedSeconds = 0;
+let numQuestions = 20;
+
+// ========== DOM ==========
+const $ = id => document.getElementById(id);
+const screens = {
+  start: $('screen-start'),
+  quiz: $('screen-quiz'),
+  results: $('screen-results')
+};
+
+function showScreen(name) {
+  Object.values(screens).forEach(s => s.classList.remove('active'));
+  screens[name].classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ========== INIT ==========
+function init() {
+  const cats = new Set(DOMANDE.map(d => d.categoria));
+  $('total-q').textContent = DOMANDE.length;
+  $('total-cat').textContent = cats.size;
+
+  // Num selector
+  document.querySelectorAll('.num-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.num-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      numQuestions = parseInt(btn.dataset.n) || DOMANDE.length;
+    });
+  });
+
+  $('btn-start').addEventListener('click', startQuiz);
+  $('btn-confirm').addEventListener('click', confirmAnswer);
+  $('btn-retry').addEventListener('click', () => { showScreen('start'); });
+  $('btn-retry-wrong').addEventListener('click', retryWrong);
+}
+
+// ========== QUIZ LOGIC ==========
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startQuiz(customQuestions) {
+  if (Array.isArray(customQuestions)) {
+    quizQuestions = shuffle(customQuestions);
+  } else {
+    quizQuestions = shuffle(DOMANDE).slice(0, numQuestions);
+  }
+  currentIndex = 0;
+  selectedOption = null;
+  answers = [];
+  elapsedSeconds = 0;
+
+  $('q-total').textContent = quizQuestions.length;
+  startTimer();
+  showScreen('quiz');
+  renderQuestion();
+}
+
+function startTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    elapsedSeconds++;
+    const m = Math.floor(elapsedSeconds / 60);
+    const s = String(elapsedSeconds % 60).padStart(2, '0');
+    $('timer').innerHTML = `⏱ <span>${m}:${s}</span>`;
+  }, 1000);
+}
+
+function renderQuestion() {
+  const q = quizQuestions[currentIndex];
+  selectedOption = null;
+  $('btn-confirm').disabled = true;
+  $('btn-confirm').textContent = currentIndex === quizQuestions.length - 1 ? 'Termina' : 'Conferma';
+
+  $('q-current').textContent = currentIndex + 1;
+  const pct = ((currentIndex) / quizQuestions.length) * 100;
+  $('progress-fill').style.width = pct + '%';
+
+  $('q-category').textContent = q.categoria;
+  $('q-text').textContent = q.question;
+
+  const letters = 'ABCDEFGH';
+  const optContainer = $('q-options');
+  optContainer.innerHTML = '';
+
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'option-btn';
+    btn.innerHTML = `<span class="option-letter">${letters[i]}</span><span>${opt}</span>`;
+    btn.addEventListener('click', () => selectOption(i, btn));
+    optContainer.appendChild(btn);
+  });
+
+  // Fade in
+  const body = $('quiz-body');
+  body.classList.remove('fade-in');
+  void body.offsetWidth;
+  body.classList.add('fade-in');
+}
+
+function selectOption(index, btn) {
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedOption = index;
+  $('btn-confirm').disabled = false;
+}
+
+function confirmAnswer() {
+  if (selectedOption === null) return;
+
+  const q = quizQuestions[currentIndex];
+  const selected = q.options[selectedOption];
+  const isCorrect = selected === q.answer;
+
+  answers.push({
+    question: q.question,
+    categoria: q.categoria,
+    selected,
+    correct: q.answer,
+    isCorrect,
+    options: q.options
+  });
+
+  currentIndex++;
+  if (currentIndex < quizQuestions.length) {
+    renderQuestion();
+  } else {
+    clearInterval(timerInterval);
+    showResults();
+  }
+}
+
+// ========== RESULTS ==========
+function showResults() {
+  const correct = answers.filter(a => a.isCorrect).length;
+  const total = answers.length;
+  const pct = Math.round((correct / total) * 100);
+
+  $('res-score').textContent = `${correct}/${total}`;
+  $('res-pct').textContent = `${pct}%`;
+
+  const m = Math.floor(elapsedSeconds / 60);
+  const s = String(elapsedSeconds % 60).padStart(2, '0');
+
+  let msg = '';
+  if (pct >= 90) msg = 'Eccellente! Sei pronto per l\'esame!';
+  else if (pct >= 75) msg = 'Molto bene! Quasi pronto!';
+  else if (pct >= 60) msg = 'Buono, ma ripassa qualche argomento.';
+  else if (pct >= 40) msg = 'Devi ancora studiare un po\'...';
+  else msg = 'Serve più studio. Non mollare!';
+
+  $('res-message').textContent = msg;
+  $('res-detail').textContent = `${correct} corrette, ${total - correct} sbagliate — Tempo: ${m}:${s}`;
+
+  // Score circle color
+  const circle = document.querySelector('.score-circle');
+  if (pct >= 75) {
+    circle.style.borderColor = '#81C784';
+    $('res-score').style.color = '#81C784';
+  } else if (pct >= 50) {
+    circle.style.borderColor = '#C9A84C';
+    $('res-score').style.color = 'var(--gold)';
+  } else {
+    circle.style.borderColor = '#E57373';
+    $('res-score').style.color = '#E57373';
+  }
+
+  // Review wrong answers
+  const wrong = answers.filter(a => !a.isCorrect);
+  const reviewList = $('review-list');
+  reviewList.innerHTML = '';
+
+  if (wrong.length === 0) {
+    $('review-section').style.display = 'none';
+    $('btn-retry-wrong').style.display = 'none';
+  } else {
+    $('review-section').style.display = 'block';
+    $('btn-retry-wrong').style.display = 'inline-block';
+
+    wrong.forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'review-item';
+      div.innerHTML = `
+        <div class="review-question">${a.question}</div>
+        <div class="review-answers">
+          <div class="review-wrong">✗ La tua risposta: ${a.selected}</div>
+          <div class="review-correct">✓ Risposta corretta: ${a.correct}</div>
+        </div>
+      `;
+      reviewList.appendChild(div);
+    });
+  }
+
+  $('progress-fill').style.width = '100%';
+  showScreen('results');
+}
+
+function retryWrong() {
+  const wrongQuestions = answers
+    .filter(a => !a.isCorrect)
+    .map(a => DOMANDE.find(d => d.question === a.question))
+    .filter(Boolean);
+
+  if (wrongQuestions.length > 0) {
+    numQuestions = wrongQuestions.length;
+    startQuiz(wrongQuestions);
+  }
+}
+
+// ========== BOOT ==========
+init();
+</script>
+</body>
+</html>
